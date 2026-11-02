@@ -31,10 +31,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .mobile-toggle,.mobile-nav{display:none}
 /* Hero */
 .hero{min-height:655px;position:relative;isolation:isolate;overflow:hidden;background:#1a3431;color:white}
-.hero-image{position:absolute;inset:0;z-index:-2;background-image:url('assets/asto-home-hero.webp');background-size:cover;background-position:center 52%;transform:scale(1.025)}
-.hero:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,27,27,.89) 0%,rgba(8,28,29,.82) 26%,rgba(8,28,29,.50) 51%,rgba(9,28,27,.08) 87%),linear-gradient(0deg,rgba(7,22,23,.53),transparent 34%)}
-.hero-inner{position:relative;min-height:655px;display:flex;align-items:center;padding:72px 0 105px}
-.hero-content{max-width:700px}
+.hero-image{position:absolute;inset:0;z-index:-2;background-image:url('assets/asto-home-hero-v2.webp');background-size:cover;background-position:center 52%;transform:scale(1.025)}
+.hero:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,27,27,.78) 0%,rgba(8,28,29,.70) 26%,rgba(8,28,29,.40) 51%,rgba(9,28,27,.06) 87%),linear-gradient(0deg,rgba(7,22,23,.45),transparent 34%)}
+.hero-inner{position:relative;min-height:655px;display:flex;align-items:center;padding:72px 0}
+.hero-content{max-width:760px}
 .hero-eyebrow{display:flex;align-items:center;gap:11px;color:#d1e5dc;font-size:10px;letter-spacing:.15em;font-weight:800}
 .eyebrow-dot{height:7px;width:7px;background:#bfdccf;border-radius:50%;box-shadow:0 0 0 5px rgba(191,220,207,.12)}
 .hero h1{font-size:clamp(57px,6vw,90px);line-height:1.065;letter-spacing:-.072em;font-weight:700;margin:25px 0 22px}
@@ -47,12 +47,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .button-light:hover{background:#dcebe2}
 .hero-text-link{display:inline-flex;gap:9px;align-items:center;color:#fff;font-size:13px;font-weight:700;border-bottom:1px solid rgba(255,255,255,.5);padding-bottom:7px;transition:color .2s}
 .hero-text-link:hover{color:#d3eadf}
-.hero-bottom{position:absolute;left:50%;transform:translateX(-50%);bottom:29px;display:flex;align-items:center;gap:18px;letter-spacing:.07em;color:#e2eae4;font-size:10px;font-weight:600}
-.hero-bottom-rule{height:1px;width:47px;background:#b4c9c0;opacity:.65}
 /* Scope bar */
 .scope-band{background:#e9eee9;border-bottom:1px solid #dde7e0}
 .scope-inner{min-height:75px;display:flex;align-items:center;justify-content:space-between;gap:30px}
-.scope-label{font-size:9px;letter-spacing:.12em;font-weight:800;color:#657b70;white-space:nowrap}
+.scope-label{font-size:10px;letter-spacing:.14em;font-weight:800;color:#4f665c;white-space:nowrap}
 .scope-entries{display:flex;align-items:center;justify-content:space-between;gap:52px;flex:0 1 760px}
 .scope-entries span{display:flex;align-items:center;gap:9px;font-size:12px;color:#28433b;font-weight:700;white-space:nowrap}
 .scope-entries i{display:block;height:5px;width:5px;background:#4d8174;transform:rotate(45deg);flex:none}
@@ -165,11 +163,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  .desktop-nav{gap:20px}
  .hero h1{font-size:clamp(58px,6.8vw,80px)}
  .approach-grid{gap:70px}.faq-grid{gap:60px}.contact-grid{gap:60px}
- .scope-entries{gap:20px}.scope-label{font-size:8px}
+ .scope-entries{gap:20px}.scope-label{font-size:9px}
 }
 @media(max-width:900px){
  .desktop-nav{gap:13px}.desktop-nav a{font-size:11px}
  .site-header{height:75px}.hero,.hero-inner{min-height:630px}
+ .hero-image{background-position:72% 52%}
  .scope-inner{flex-direction:column;align-items:stretch;justify-content:center;gap:15px;padding:20px 0}
  .scope-entries{justify-content:space-between;gap:15px;flex:unset}
  .section{padding:86px 0}.approach-section{padding:89px 0}
@@ -199,13 +198,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  .mobile-nav a{display:block;padding:15px 1px;font-size:15px;font-weight:700;border-bottom:1px solid #edf0ed}
  .mobile-nav-contact{display:flex!important;justify-content:space-between;color:#29604e}
  .hero,.hero-inner{min-height:655px}
- .hero-image{background-position:64% center}
+ .hero-image{background-position:76% center}
  .hero:before{background:linear-gradient(90deg,rgba(6,23,24,.83),rgba(6,25,26,.43)),linear-gradient(0deg,rgba(4,18,19,.58),transparent 70%)}
- .hero-inner{padding:70px 0 99px}
+ .hero-inner{padding:70px 0}
  .hero-content{max-width:550px}
  .hero h1{font-size:clamp(51px,10vw,69px);line-height:1.1}
  .hero-content>p{font-size:15px;line-height:1.77;max-width:470px}
- .hero-bottom{bottom:23px}
  .scope-entries{flex-wrap:wrap;justify-content:flex-start;gap:10px 21px}.scope-entries span{font-size:11px}
  .section-intro{flex-direction:column;align-items:start;gap:23px}
  .section-intro>p{max-width:560px}
@@ -236,7 +234,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  .hero h1{font-size:clamp(47px,11vw,56px);letter-spacing:-.064em}
  .hero-actions{gap:20px}
  .hero-text-link{font-size:12px}
- .scope-label{font-size:8px}.scope-entries{gap:10px 13px}.scope-entries span{font-size:10px}
+ .scope-label{font-size:9px}.scope-entries{flex-direction:column;align-items:flex-start;gap:9px}.scope-entries span{font-size:11px}
  .section{padding:75px 0}
  .section-intro h2,.faq-heading h2{font-size:39px}
  .approach-section{padding:75px 0}
