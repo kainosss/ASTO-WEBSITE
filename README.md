@@ -4,11 +4,11 @@ Responsive, one-page, original static website designed for **Brisbane residentia
 
 ## How to preview
 
-Open `index.html` in a browser. Keep the `assets/` folder, `styles.css`, and `script.js` together. The hero photograph is a locally bundled optimized WebP file; it doesn't need an internet connection. Online Google Fonts are optional; system fonts are used as a fallback.
+Open `public/index.html` in a browser, or run `python3 -m http.server 8000 --directory public` and visit `http://localhost:8000`. Keep everything inside `public/` together. The hero photograph is a locally bundled optimized WebP file; it doesn't need an internet connection. Online Google Fonts are optional; system fonts are used as a fallback.
 
 ## Before publishing
 
-1. Update business contact information and confirmed company/ABN details. Set `SITE_CONFIG.contactEmail` in `script.js` if you'd like to enable a **mailto draft** (still requires the visitor to send from their email app). For a truly working contact form, connect a real form backend such as Formspree or Cloudflare Workers with spam protection. **The contact form is intentionally inactive in the demo and never falsely reports a successful submission.**
+1. Update business contact information and confirmed company/ABN details. Set `SITE_CONFIG.contactEmail` in `public/script.js` if you'd like to enable a **mailto draft** (still requires the visitor to send from their email app). For a truly working contact form, connect a real form backend such as Formspree or Cloudflare Workers with spam protection. **The contact form is intentionally inactive in the demo and never falsely reports a successful submission.**
 2. Verify and publish only the applicable Queensland security licensing and business details. Security equipment installation/servicing generally requires an individual security equipment installer licence; the requirements for a separate firm licence depend on the business structure (the Queensland Government describes a sole-trader exemption for a person who performs all the security work personally). Review current rules before trading.
 3. Check your employment contract and any outside-work/conflict requirements before public marketing or accepting work. Do not use photos or client references from an employer without permission.
 4. Check the final business name and domain, then connect a proper mailbox. Confirm privacy and data-handling requirements when deploying a form.
@@ -17,11 +17,15 @@ Open `index.html` in a browser. Keep the `assets/` folder, `styles.css`, and `sc
 
 ## Files
 
-- `index.html`: layout, content, navigation
-- `styles.css`: appearance, responsive breakpoints, accessibility
-- `script.js`: mobile navigation, scroll effects, year, enquiry draft
-- `assets/asto-home-hero.webp`: generated illustrative hero image
-- `assets/branding/`: proposed Concept 1 vector logos (geometric A, forest green and sage); `asto-favicon-tab.svg` (geometric A on a forest-green rounded square, tuned for 16–32px tabs) is the site favicon; the header and footer use the inlined `asto-horizontal-dark.svg` and `asto-horizontal-light.svg`
+Everything in `public/` is the website and is the only folder Cloudflare serves. Repository files such as this README and `CLAUDE.md` are never published.
+
+- `public/index.html`: layout, content, navigation
+- `public/styles.css`: appearance, responsive breakpoints, accessibility
+- `public/script.js`: mobile navigation, scroll effects, year, enquiry draft
+- `public/_headers`: pre-launch `noindex` header for all pages (remove only at approved launch)
+- `public/assets/asto-home-hero.webp`: generated illustrative hero image
+- `public/assets/branding/`: proposed Concept 1 vector logos (geometric A, forest green and sage); `asto-favicon-tab.svg` (geometric A on a forest-green rounded square, tuned for 16–32px tabs) is the site favicon; the header and footer use the inlined `asto-horizontal-dark.svg` and `asto-horizontal-light.svg`
+- `wrangler.jsonc`: Cloudflare Workers config (Worker `asto-website`, serves `./public`); required for pull-request preview builds
 
 ## Inspiration / research
 

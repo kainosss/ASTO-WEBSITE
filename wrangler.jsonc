@@ -1,0 +1,21 @@
+// Cloudflare Workers configuration for the ASTO SECURITY static website.
+//
+// The site is plain static files in ./public — there is no build step, no
+// Worker script and no dependencies. Only ./public is uploaded, so repository
+// files such as CLAUDE.md, README.md and .git are never served.
+//
+// Workers Builds runs `wrangler deploy` on the production branch and
+// `wrangler versions upload` / `wrangler preview` on other branches (pull
+// request previews). Those preview commands cannot auto-detect a static site,
+// so this file is required for preview builds to succeed.
+//
+// "name" must match the Worker's name in the Cloudflare dashboard.
+{
+  "name": "asto-website",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public"
+  },
+  // Required by `wrangler preview` (Workers Builds non-production branches).
+  "previews": {}
+}
