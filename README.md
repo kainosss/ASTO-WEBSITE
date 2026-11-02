@@ -23,7 +23,7 @@ Everything in `public/` is the website and is the only folder Cloudflare serves.
 - `public/styles.css`: appearance, responsive breakpoints, accessibility
 - `public/script.js`: mobile navigation, scroll effects, year, enquiry draft
 - `public/_headers`: pre-launch `noindex` header for all pages (remove only at approved launch)
-- `public/assets/asto-home-hero-v2.webp`: AI-generated/composited background-only hero image (no baked-in text); illustrative only, not an ASTO job or a specific installed product
+- `public/assets/asto-home-hero-v3.webp`: AI-generated illustrative hero background (photograph-style, no baked-in text); not genuine on-site photography, a customer site or an ASTO installation
 - `public/assets/branding/`: proposed Concept 1 vector logos (geometric A, forest green and sage); `asto-favicon-tab.svg` (geometric A on a forest-green rounded square, tuned for 16–32px tabs) is the site favicon; the header and footer use the inlined `asto-horizontal-dark.svg` and `asto-horizontal-light.svg`
 - `wrangler.jsonc`: Cloudflare Workers config (Worker `asto-website`, serves `./public`); required for pull-request preview builds
 
