@@ -21,7 +21,7 @@ Open `index.html` in a browser. Keep the `assets/` folder, `styles.css`, and `sc
 - `styles.css`: appearance, responsive breakpoints, accessibility
 - `script.js`: mobile navigation, scroll effects, year, enquiry draft
 - `assets/asto-home-hero.webp`: generated illustrative hero image
-- `assets/favicon.svg`: simple ASTO monogram
+- `assets/branding/`: proposed Concept 1 vector logos (geometric A, forest green and sage); `asto-favicon-tab.svg` (geometric A on a forest-green rounded square, tuned for 16–32px tabs) is the site favicon; the header and footer use the inlined `asto-horizontal-dark.svg` and `asto-horizontal-light.svg`
 
 ## Inspiration / research
 

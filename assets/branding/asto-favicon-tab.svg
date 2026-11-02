@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 100 100" role="img" aria-label="ASTO SECURITY">
+<title>ASTO SECURITY</title>
+<!-- Browser-tab favicon: Concept 1 geometric A (asto-icon-white.svg paths) on a forest-green rounded square -->
+<rect width="100" height="100" rx="22" fill="#0B3D2E"/>
+<g transform="translate(11.4 9.5) scale(0.78)" aria-hidden="true">
+  <path d="M8 91L47 12H65L91 61H73L56 29L28 91H8Z" fill="#FFFFFF"/>
+  <path d="M44 64H75L90 91H32L42 72H68L65 67H44Z" fill="#9DB49E"/>
+</g>
+</svg>
