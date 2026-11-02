@@ -1,0 +1,5 @@
+# Cloudflare Workers static-assets headers. This file is not served publicly.
+# Pre-launch: ask search engines not to index any page or preview URL.
+# Remove this rule only when the owner approves the public launch.
+/*
+  X-Robots-Tag: noindex, nofollow

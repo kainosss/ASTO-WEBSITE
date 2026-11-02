@@ -12,16 +12,19 @@
 - Modern, minimalist, welcoming, and trustworthy; not aggressive or corporate.
 - Visual palette: warm off-white backgrounds, deep forest-green sections, subtle muted accent tones.
 - Keep generous whitespace, simple cards, readable type, light animation, and a strong photographic hero.
-- Hero is a synthetic illustrative image in `assets/asto-home-hero.webp`, **not** evidence of an ASTO installation. Do not present it as a completed job.
+- Hero is a synthetic illustrative image in `public/assets/asto-home-hero.webp`, **not** evidence of an ASTO installation. Do not present it as a completed job.
 - Preserve desktop and mobile responsiveness, accessible controls, and sensible reduced-motion support.
 
 ## Codebase and development
 - This is intentionally a simple, dependency-free static site. No framework, build step, database, or package manager is required.
-- `index.html`: all page content and markup.
-- `styles.css`: styling and responsive design.
-- `script.js`: mobile menu, section reveal, dynamic copyright year, form demo behaviour.
-- `assets/`: bundled optimised hero photo and SVG favicon.
-- Preview by opening `index.html`, or serve locally with `python -m http.server 8000` and visit `http://localhost:8000`.
+- The website lives in `public/`, the only folder Cloudflare serves; keep internal docs like this file outside it.
+- `public/index.html`: all page content and markup.
+- `public/styles.css`: styling and responsive design.
+- `public/script.js`: mobile menu, section reveal, dynamic copyright year, form demo behaviour.
+- `public/assets/`: bundled optimised hero photo, plus logos and favicon in `public/assets/branding/`.
+- `public/_headers`: pre-launch `noindex` header; remove only when the owner approves launch.
+- `wrangler.jsonc` (repo root): Cloudflare Workers config for Worker `asto-website`, serving `./public`. Workers Builds preview builds fail without it, so keep it.
+- Preview by opening `public/index.html`, or serve locally with `python -m http.server 8000 --directory public` and visit `http://localhost:8000`.
 - Prefer small, targeted changes. Ask before introducing a framework, backend or paid third-party service.
 - Keep the ASTO project completely separate from VERLONIQ, its repository, branding and deployment.
 
@@ -35,7 +38,7 @@
 - Avoid Google indexing and public deployment until the owner explicitly approves launch. Do not push to GitHub, deploy Cloudflare, register a domain, send real emails, or modify any other project without clear approval.
 
 ## Good default workflow
-1. Read this file, `README.md`, `index.html`, `styles.css`, and `script.js` before editing.
+1. Read this file, `README.md`, `public/index.html`, `public/styles.css`, and `public/script.js` before editing.
 2. Show a brief plan or proposed changes.
 3. Make focused edits to the existing files only.
 4. Check navigation, mobile breakpoints, image paths, form disclaimer, and console errors.

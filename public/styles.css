@@ -21,11 +21,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .site-header{height:84px;background:#fdfdfb;position:relative;z-index:30;border-bottom:1px solid rgba(15,45,39,.08)}
 .header-row{height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .brand{display:flex;gap:10px;align-items:center;min-width:168px;line-height:1}
-.brand-mark{width:41px;height:41px;border-radius:12px;background:var(--dark);color:#d6ebdf;display:grid;place-items:center}
-.brand-mark svg{width:26px;height:26px}
-.brand-words{display:grid;gap:5px}
-.brand-words strong{font-family:Manrope,Arial,sans-serif;font-size:25px;font-weight:800;line-height:.86;letter-spacing:-.065em}
-.brand-words span{font-size:8px;letter-spacing:.34em;font-weight:700;color:#516760}
+.brand-logo{display:block;height:42px;width:auto;aspect-ratio:474/92;overflow:visible}
 .desktop-nav{display:flex;gap:36px;align-items:center;margin-left:auto;margin-right:auto}
 .desktop-nav a{font-size:13px;font-weight:700;color:#4a625c;transition:color .2s}
 .desktop-nav a:hover{color:#0c2823}
@@ -153,8 +149,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 /* Footer */
 .footer{background:#0a211e;color:#dbece0}
 .footer-main{display:grid;grid-template-columns:1fr 1.3fr 1.5fr;gap:45px;align-items:center;padding:44px 0 40px}
-.footer-brand{font-family:Manrope,Arial,sans-serif;font-size:23px;letter-spacing:-.065em;font-weight:800;white-space:nowrap}
-.footer-brand span{font-family:'DM Sans',Arial,sans-serif;font-size:9px;letter-spacing:.16em;color:#bdd9c8;margin-left:7px}
+.footer-brand{display:inline-block;justify-self:start;line-height:0}
+.footer-logo{display:block;height:36px;width:auto;aspect-ratio:474/92;overflow:visible}
 .footer-main p{font-size:12px;line-height:1.7;color:#a8c2b4;margin:0;max-width:285px}
 .footer-links{display:flex;justify-content:flex-end;gap:22px;flex-wrap:wrap}
 .footer-links a{font-size:11px;font-weight:600;color:#cde0d3}
@@ -191,7 +187,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  html{scroll-padding-top:72px}
  .container{width:calc(100% - 40px)}
  .site-header{height:72px}
- .brand-mark{height:37px;width:37px}.brand-words strong{font-size:22px}
+ .brand-logo{height:34px}
  .desktop-nav,.header-cta{display:none}
  .mobile-toggle{height:40px;width:43px;border:1px solid #dce5df;background:#fff;border-radius:6px;display:grid;place-items:center;color:#203e36}
  .mobile-toggle svg{height:22px;width:22px;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;fill:none}
@@ -229,6 +225,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  .contact-grid{gap:38px}
  .contact-form-card{padding:30px 24px}
  .footer-main{grid-template-columns:1fr;gap:14px;padding:34px 0 30px}
+ .footer-logo{height:32px}
  .footer-links{grid-column:auto;justify-content:flex-start;gap:12px 20px;margin-top:12px}
  .footer-bottom{flex-wrap:wrap;gap:11px}
 }

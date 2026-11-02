@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="405" height="290" viewBox="0 0 405 290" role="img" aria-label="ASTO SECURITY">
+<title>ASTO SECURITY</title>
+<g transform="translate(148 5) scale(1.25)" aria-hidden="true">
+  <path d="M8 91L47 12H65L91 61H73L56 29L28 91H8Z" fill="#0B3D2E"/>
+  <path d="M44 64H75L90 91H32L42 72H68L65 67H44Z" fill="#9DB49E"/>
+</g>
+<text x="202" y="209" font-family="Manrope,Montserrat,Arial,sans-serif" font-size="65" font-weight="800" text-anchor="middle" letter-spacing="5" fill="#2B2B2B">ASTO</text>
+<text x="202" y="254" font-family="Manrope,Montserrat,Arial,sans-serif" font-size="29" font-weight="400" text-anchor="middle" letter-spacing="9" fill="#2B2B2B">SECURITY</text>
+</svg>
