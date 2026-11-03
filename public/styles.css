@@ -142,6 +142,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .form-submit:hover{background:#2c5a4a}
 .form-feedback{font-size:14px;color:#2f5f45;line-height:1.5;margin:12px 0 0}.form-feedback:empty{display:none}
 .form-disclaimer{font-size:13px;color:#4f625b;line-height:1.6;margin:14px 0 0}
+.form-disclaimer a{text-decoration:underline;text-underline-offset:2px;color:#2f5f45}
+#enquiryForm[data-mode="live"] .form-preview-note{display:none}
+.form-preview-note{display:block;margin-bottom:4px;font-weight:600;color:#3f5a50}
+.field-error{font-size:13px;color:#a12a1f;margin:0;line-height:1.4}
+.field [aria-invalid="true"]{border-color:#c0473b;background:#fffafa}
+.form-required-note{font-size:13px;color:var(--muted);margin:-4px 0 16px}
+.form-trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.form-submit:disabled{opacity:.7;cursor:progress}
+.form-feedback{padding:0}.form-feedback:focus{outline:none}
+.form-feedback[data-state]{border-radius:5px;padding:11px 13px;font-weight:600}
+.form-feedback[data-state="success"]{background:#e6f2ea;color:#1f5137}
+.form-feedback[data-state="error"]{background:#fbeceb;color:#8a2219}
+.form-feedback[data-state="preview"],.form-feedback[data-state="sending"]{background:#eef2ee;color:#304a40}
 /* Footer */
 .footer{background:#0a211e;color:#dbece0}
 .footer-main{display:grid;grid-template-columns:1fr 1.3fr 1.5fr;gap:45px;align-items:center;padding:44px 0 40px}
@@ -153,6 +166,21 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .footer-links a:hover,.footer-bottom a:hover{text-decoration:underline}
 .footer-bottom{border-top:1px solid rgba(216,237,220,.13);display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px 0 20px;color:#a3bdb0;font-size:13px}
 .footer-bottom a{display:inline-block;padding:10px 0}
+/* Simple pages (privacy, 404) */
+.legal{padding:88px 0 110px}
+.legal-inner{max-width:760px}
+.legal h1{font-size:clamp(37px,4.15vw,56px);line-height:1.1;letter-spacing:-.06em;margin:0 0 22px}
+.legal h2{font-size:22px;letter-spacing:-.035em;margin:40px 0 10px}
+.legal p,.legal li{font-size:16px;line-height:1.75;color:var(--ink)}
+.legal ul{padding-left:20px;margin:0 0 16px}.legal li{margin-bottom:8px}
+.legal a{text-decoration:underline;text-underline-offset:2px;color:#25594a}
+.legal-lead{font-size:18px!important;color:var(--muted)!important}
+.legal-updated{margin-top:44px;font-size:14px!important;color:var(--muted)!important}
+.legal-actions{display:flex;flex-wrap:wrap;gap:22px;align-items:center;margin-top:30px}
+.legal .button-dark{background:var(--dark);color:#f9fcfa;text-decoration:none}
+.legal .button-dark:hover{background:#27554c}
+.legal-link{font-weight:700}
+.simple-page .footer-bottom{border-top:0}
 /* Motion */
 .reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s ease}
 .reveal.is-visible{opacity:1;transform:translateY(0)}
@@ -186,6 +214,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
  .site-header{height:72px}
  .brand-logo{height:34px}
  .desktop-nav,.header-cta{display:none}
+ .simple-page .header-cta-simple{display:flex;padding:0 14px;gap:12px;min-height:40px}
+ .legal{padding:56px 0 72px}
  .mobile-toggle{height:40px;width:43px;border:1px solid #dce5df;background:#fff;border-radius:6px;display:grid;place-items:center;color:#203e36}
  .mobile-toggle svg{height:22px;width:22px;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;fill:none}
  .mobile-toggle .close-icon{display:none}
