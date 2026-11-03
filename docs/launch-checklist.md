@@ -10,11 +10,13 @@ Follow **`docs/enquiry-form-setup.md`** step by step. In short:
 1. Create a strong shared secret in your password manager.
 2. Create and deploy the Google Apps Script as admin@astosec.com (web app; Execute as: Me; Who has
    access: Anyone), and store the shared secret in its Script Properties.
-3. Create a Cloudflare Turnstile widget for the preview hostname.
-4. Add the five secrets to the **preview only** (`FORM_ENABLED`, `TURNSTILE_SITE_KEY`,
-   `TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_URL`, `APPS_SCRIPT_SHARED_SECRET`).
-5. Test genuine enquiries end to end on the preview, including a failure test.
-6. Production stays disabled (no secrets) until you approve launch.
+3. Create a Cloudflare Turnstile widget for the production workers.dev hostname.
+4. Merge the pull request. The Worker deploys with the form **off**; check `/api/enquiry/config`
+   shows `{"enabled":false…}`.
+5. In the Cloudflare dashboard (Production → Variables and secrets), add `TURNSTILE_SITE_KEY`,
+   `TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_URL` and `APPS_SCRIPT_SHARED_SECRET` as secrets.
+6. Add `FORM_ENABLED` = `true` to switch the form on, then test genuine enquiries, including a
+   failure test. Delete `FORM_ENABLED` to switch it off again at any time.
 
 No DNS records and no organisation-wide Google sharing settings are changed. There is no extra
 subscription: Cloudflare Workers Free, Turnstile and Apps Script (included in Google Workspace).

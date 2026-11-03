@@ -32,7 +32,7 @@ Everything in `public/` is the website and is the only folder Cloudflare serves.
 - `public/assets/asto-home-hero-v3.webp`: AI-generated illustrative hero background (photograph-style, no baked-in text); not genuine on-site photography, a customer site or an ASTO installation
 - `public/assets/branding/`: proposed Concept 1 vector logos (geometric A, forest green and sage); `asto-favicon-tab.svg` (geometric A on a forest-green rounded square, tuned for 16–32px tabs) is the site favicon; the header and footer use the inlined `asto-horizontal-dark.svg` and `asto-horizontal-light.svg`
 - `wrangler.jsonc`: Cloudflare Workers config (Worker `asto-website`: script `worker/index.js` for `/api/*`, static files from `./public`, 404 page for unknown URLs); required for pull-request preview builds. Secrets live in Cloudflare, never here
-- `docs/enquiry-form-setup.md`: step-by-step setup of Apps Script, Turnstile, preview secrets and end-to-end testing
+- `docs/enquiry-form-setup.md`: step-by-step setup of Apps Script, Turnstile, the Cloudflare dashboard settings and end-to-end testing
 - `docs/launch-checklist.md`: every manual setup step before launch (enquiry form, business details, domain, indexing)
 - `docs/enquiry-workflow.md`: how enquiries arrive, email filters, reply templates
 - `docs/business-templates/`: printable quote, invoice, CCTV/alarm handover and maintenance report templates (not served)

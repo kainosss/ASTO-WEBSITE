@@ -15,7 +15,18 @@ Visitor's browser ──POST /api/enquiry──▶ Cloudflare Worker (asto-websi
 ```
 
 The visitor sees "Your enquiry has been sent" **only** after Apps Script confirms that MailApp
-accepted the email. Production stays **disabled** until you add its secrets after an approved launch.
+accepted the email.
+
+**The form is off until you switch it on.** The Worker reports the form as enabled only when
+`FORM_ENABLED` is exactly `true` **and** the four other settings are present. Until then the site
+shows "Website preview: this form is not connected yet" and accepts nothing, so it is safe to merge
+and deploy the Worker before adding any settings. Search indexing stays off throughout
+(`public/_headers` sends `noindex`). Nothing here changes Google Workspace DNS (MX, SPF, DKIM,
+DMARC) or Google sharing settings.
+
+Overview: Part 1–3 prepare the accounts → Part 4 merge and check (form still off) → Part 5 add the
+credentials in the Cloudflare dashboard → Part 6 switch on and test → Part 7 switching off, rollback
+and the public launch.
 
 Never paste secrets into chat, GitHub, email or this repository. Turn on two-factor authentication
 for both the Google Workspace and Cloudflare accounts.
@@ -70,96 +81,95 @@ Do all of this while signed in as **admin@astosec.com**.
 1. Cloudflare dashboard → **Turnstile** → **Add widget**.
 2. Settings:
    - Widget name: **ASTO website**
-   - Hostnames: add `claude-dazzling-meitner-k2g3cu-asto-website.kainerpersonal.workers.dev`
-     (the preview). Add `astosec.com` and `www.astosec.com` later, at launch.
+   - Hostnames: add your **production workers.dev hostname**. You'll find it in the Cloudflare
+     dashboard under **Workers & Pages → asto-website → Settings → Domains & Routes**; it is likely
+     `asto-website.kainerpersonal.workers.dev`. Add `astosec.com` and `www.astosec.com` later, when
+     the domain is connected.
    - Widget mode: **Managed**
    - Pre-clearance: **No**
 3. **Create**, then copy the **Site key** (public) and the **Secret key** (private).
 
-## Part 4: Add the secrets to the PREVIEW only (never production)
+## Part 4: Merge PR #5 and check the form is still off
 
-Previews and production have **separate** secrets in Cloudflare. Add these **only to the preview
-for this branch** (`claude-dazzling-meitner-k2g3cu`).
+1. On GitHub, open the ASTO pull request and select **Merge** (only once you have approved it).
+   Workers Builds deploys the website and the Worker script to production, usually within a
+   minute or two. You can watch it under **asto-website → Deployments**.
+2. Open `https://<your production hostname>/api/enquiry/config` in your browser. It should show:
 
-| Name | Value |
-|---|---|
-| `FORM_ENABLED` | `true` |
-| `TURNSTILE_SITE_KEY` | Turnstile site key (Part 3) |
-| `TURNSTILE_SECRET_KEY` | Turnstile secret key (Part 3) |
-| `APPS_SCRIPT_URL` | Apps Script web app URL ending in `/exec` (Part 2) |
-| `APPS_SCRIPT_SHARED_SECRET` | the shared secret (Part 1) |
+   ```
+   {"enabled":false,"turnstileSiteKey":""}
+   ```
 
-**Recommended: from your own computer with Wrangler** (needs Node.js 18 or later). Run each
-command, then paste the value when Wrangler asks. The value isn't shown on screen or saved in your
-shell history.
+   - If you see the **"Page not found"** page instead, the Worker script didn't deploy. Stop here
+     and tell Claude. The form stays safely off either way.
+3. Open the homepage. It should look the same as before, and the form should say **"Website
+   preview: this form is not connected yet"**.
 
-```bash
-npx wrangler login
-```
+## Part 5: Add the credentials in the Cloudflare dashboard (form still off)
 
-```bash
-npx wrangler preview secret put FORM_ENABLED --worker-name asto-website --name claude-dazzling-meitner-k2g3cu
-```
+1. Cloudflare dashboard → **Workers & Pages** → **asto-website** → **Settings** →
+   **Variables and secrets**. Make sure the toggle shows **Production**.
+   - Now that the Worker has a script, the message "Variables cannot be added to a Worker that only
+     has static assets" should no longer appear.
+2. Select **+ Add** and add these four, each with **Type: Secret**:
 
-Repeat the same command for `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_URL` and
-`APPS_SCRIPT_SHARED_SECRET`. Each command creates a new preview deployment with the secret added.
+   | Name | Value |
+   |---|---|
+   | `TURNSTILE_SITE_KEY` | Turnstile site key (Part 3) |
+   | `TURNSTILE_SECRET_KEY` | Turnstile secret key (Part 3) |
+   | `APPS_SCRIPT_URL` | Apps Script web app URL ending in `/exec` (Part 2) |
+   | `APPS_SCRIPT_SHARED_SECRET` | the shared secret (Part 1) |
 
-Check that all five names are listed for the preview:
+   Type each name exactly as shown (capitals and underscores).
+3. Select **Deploy** (or **Save and deploy**). The form is **still off**, because `FORM_ENABLED`
+   isn't set yet.
 
-```bash
-npx wrangler preview secret list --worker-name asto-website --name claude-dazzling-meitner-k2g3cu
-```
+Settings saved in the dashboard stay in place when future GitHub changes are deployed:
+`wrangler.jsonc` has `keep_vars: true`, and secrets are never removed by deploys.
 
-**Do not** run `npx wrangler secret put …` (without `preview`). That sets production secrets.
+## Part 6: Switch the form on and test a genuine enquiry
 
-**Alternative: the dashboard.** Add the same five as **encrypted secrets** in the asto-website
-Worker's **Preview** settings. Do not add them to the Worker's main "Variables and Secrets" list,
-which is production.
-
-## Part 5: Test a genuine enquiry end to end (preview only)
-
-1. Open the preview at
-   `https://claude-dazzling-meitner-k2g3cu-asto-website.kainerpersonal.workers.dev` and refresh the
-   page.
-   - The grey "Website preview: this form is not connected…" line under the button should be gone.
-   - Use this branch address, **not** the commit-specific `xxxxxxxx-asto-website…` address. Turnstile
-     only allows the hostnames you listed.
-2. Fill in the form as a customer would. Use a **personal** email address (not admin@astosec.com),
+1. In the same **Variables and secrets** list, select **+ Add**: name `FORM_ENABLED`, **Type: Secret**,
+   value `true`. Select **Deploy**.
+2. Open the website on your production hostname and refresh the page. The grey "Website preview:
+   this form is not connected…" line under the button should be gone.
+3. Fill in the form as a customer would. Use a **personal** email address (not admin@astosec.com),
    choose **CCTV installation**, and wait at least 3 seconds. Then select **Send enquiry**.
-3. Expect **"Sending…"**, then the green **"Thank you. Your enquiry has been sent…"** message.
-4. In the admin@astosec.com inbox, check that:
+4. Expect **"Sending…"**, then the green **"Thank you. Your enquiry has been sent…"** message.
+5. In the admin@astosec.com inbox, check that:
    - it comes from **ASTO Security website &lt;admin@astosec.com&gt;**;
    - the subject is **New ASTO enquiry: CCTV installation – &lt;suburb&gt;**;
    - every field is correct, and "Phone: Not supplied" appears if you left phone blank;
    - **Reply** addresses the personal email you entered.
-5. Repeat with **Intruder alarms** and **Preventative maintenance**, and check that your email
+6. Repeat with **Intruder alarms** and **Preventative maintenance**, and check that your email
    filters sort them (see `docs/enquiry-workflow.md`).
-6. **Failure test:** in Apps Script → Project Settings, temporarily change `SHARED_SECRET` to
+7. **Failure test:** in Apps Script → Project Settings, temporarily change `SHARED_SECRET` to
    anything else. Submit again. You should see the red **"could not be sent"** message, your
    details should stay in the form, and **no email** should arrive. Then **put the real secret
    back**.
-7. **Privacy check:** Apps Script → **Executions** should show runs, but no names, emails or
+8. **Privacy check:** Apps Script → **Executions** should show runs, but no names, emails or
    messages.
-8. **Production is still off:** open
-   `https://asto-website.kainerpersonal.workers.dev/api/enquiry/config` (your production
-   workers.dev address). It should show `{"enabled":false,…}`.
-9. Tell me the results. If anything fails, send me the **error message shown on the page** (never
-   the secrets).
+9. If anything fails, tell Claude the **error message shown on the page** (never the secrets).
 
-## Part 6: At the approved launch (not before)
+While the form is on, anyone with the workers.dev address can send an enquiry. The site isn't
+indexed by search engines and isn't on astosec.com yet. If you're not ready for real customers
+after testing, switch the form off (below) until you are.
 
-1. Add `astosec.com` (and `www.astosec.com` if used) to the Turnstile widget's hostnames.
-2. Add the same five secrets to **production**:
+## Part 7: Switching off, rolling back and launching
 
-   ```bash
-   npx wrangler secret put FORM_ENABLED --name asto-website
-   ```
+**Turning the form off at any time:** in **Variables and secrets** (Production), delete
+`FORM_ENABLED` (or set it to anything other than `true`) and select **Deploy**. The form returns to
+the "not connected" state straight away and accepts nothing. The other four settings can stay.
 
-   Repeat for the other four.
-3. Send one real test enquiry on the live domain.
+**Rolling back the whole change:** on GitHub, open the merged pull request → **Revert** → merge the
+revert pull request. Production redeploys the previous version. Alternatively, **asto-website →
+Deployments** lets you roll back to an earlier version.
 
-**Turning the form off at any time:** delete `FORM_ENABLED` (or set it to anything other than
-`true`). The form immediately returns to the "not connected" state and accepts nothing.
+**At the public launch** (with separate approval):
+1. Connect `astosec.com` to the Worker, and add `astosec.com` (and `www.astosec.com` if used) to the
+   Turnstile widget's hostnames.
+2. Make sure `FORM_ENABLED` is `true`, then send one real test enquiry on the live domain.
+3. Follow `docs/launch-checklist.md` section C (sitemap, sharing image, removing `noindex`).
 
 **If a secret may have leaked:**
 - Shared secret: generate a new one, then update it in both Apps Script (Script Properties) and

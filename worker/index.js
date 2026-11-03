@@ -7,7 +7,7 @@
  *                               admin@astosec.com (recipient is fixed inside Apps Script, not here).
  *
  * Configuration (Cloudflare secrets; never committed to the repository):
- *   FORM_ENABLED              "true" to accept enquiries. Leave unset in production until launch is approved.
+ *   FORM_ENABLED              "true" to accept enquiries. Unset (or anything else) keeps the form disabled.
  *   TURNSTILE_SITE_KEY        public Turnstile site key (sent to the browser)
  *   TURNSTILE_SECRET_KEY      private Turnstile secret key
  *   APPS_SCRIPT_URL           the Apps Script web app URL (https://script.google.com/macros/s/…/exec)

@@ -8,8 +8,8 @@
 // `wrangler preview` on other branches (pull request previews); this file is required for both.
 //
 // Secrets (FORM_ENABLED, TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY, APPS_SCRIPT_URL,
-// APPS_SCRIPT_SHARED_SECRET) are set in Cloudflare, never here. Previews and production have separate
-// secrets; production stays without them (form disabled) until launch is approved.
+// APPS_SCRIPT_SHARED_SECRET) are set in the Cloudflare dashboard, never here. Without all five
+// (FORM_ENABLED=true) the form stays disabled.
 // See docs/enquiry-form-setup.md.
 //
 // "name" must match the Worker's name in the Cloudflare dashboard.
