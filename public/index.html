@@ -6,11 +6,40 @@
   <meta name="theme-color" content="#f8f8f5">
   <meta name="description" content="ASTO Security offers CCTV camera systems, intruder alarms and preventative maintenance for Brisbane homes and small businesses.">
   <title>ASTO Security | CCTV, Alarms & Maintenance in Brisbane</title>
+  <!-- Sharing preview. At launch, change og:image to the full https:// address on the live domain and add
+       <link rel="canonical"> and og:url with that domain (see docs/launch-checklist.md). -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ASTO Security">
+  <meta property="og:locale" content="en_AU">
+  <meta property="og:title" content="ASTO Security | CCTV, Alarms & Maintenance in Brisbane">
+  <meta property="og:description" content="CCTV camera systems, intruder alarms and preventative maintenance for Brisbane homes and small businesses.">
+  <meta property="og:image" content="assets/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="ASTO Security: Security that works. Without the fuss.">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/branding/asto-favicon-tab.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/branding/apple-touch-icon.png">
+  <link rel="preload" href="assets/asto-home-hero-v3.webp" as="image" type="image/webp" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "ASTO Security",
+    "description": "CCTV camera systems, intruder alarms and preventative maintenance for Brisbane homes and small businesses.",
+    "areaServed": { "@type": "City", "name": "Brisbane", "containedInPlace": { "@type": "State", "name": "Queensland" } },
+    "makesOffer": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "CCTV camera systems" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Intruder alarms" } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Preventative maintenance" } }
+    ]
+  }
+  </script>
+  <script src="config.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
@@ -116,11 +145,11 @@
         <div class="customer-grid">
           <article class="customer-card customer-home reveal">
             <div class="customer-card-top"><span>Residential</span><svg viewBox="0 0 44 44" aria-hidden="true"><path d="m6 20 16-13 16 13v17H6V20Z"/><path d="M17 37V24h10v13"/></svg></div>
-            <div><h3>At home.</h3><p>Houses, townhouses and residential properties. Cameras and alarms that fit naturally into everyday life.</p><a href="#contact">Enquire about home security <span aria-hidden="true">↗</span></a></div>
+            <div><h3>At home.</h3><p>Houses, townhouses and residential properties. Cameras and alarms that fit naturally into everyday life.</p><a href="#contact" data-property="Residential">Enquire about home security <span aria-hidden="true">↗</span></a></div>
           </article>
           <article class="customer-card customer-business reveal">
             <div class="customer-card-top"><span>Small commercial</span><svg viewBox="0 0 44 44" aria-hidden="true"><path d="M5 17h34l-3-10H8L5 17Zm3 0v21h28V17M15 38V25h14v13"/><path d="M5 17c0 6 7 6 9 1 2 5 9 5 11 0 2 5 9 5 11-1"/></svg></div>
-            <div><h3>At work.</h3><p>Local shops, offices and smaller business premises. Reliable, sensible systems without the complexity of a large site.</p><a href="#contact">Enquire about business security <span aria-hidden="true">↗</span></a></div>
+            <div><h3>At work.</h3><p>Local shops, offices and smaller business premises. Reliable, sensible systems without the complexity of a large site.</p><a href="#contact" data-property="Small business">Enquire about business security <span aria-hidden="true">↗</span></a></div>
           </article>
         </div>
       </div>
@@ -148,14 +177,17 @@
         </div>
         <div class="contact-form-card reveal">
           <div class="form-heading"><h3>Tell us what you need.</h3><p>A few details are all we need to start.</p></div>
-          <form id="enquiryForm">
-            <div class="field-row"><div class="field"><label for="fullName">Your name <span>*</span></label><input id="fullName" name="fullName" autocomplete="name" placeholder="Full name" required></div><div class="field"><label for="email">Email address <span>*</span></label><input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required></div></div>
-            <div class="field-row"><div class="field"><label for="phone">Phone <span class="optional">(optional)</span></label><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="04xx xxx xxx"></div><div class="field"><label for="property">Property type <span>*</span></label><select id="property" name="property" required><option value="" disabled selected>Choose an option</option><option>Residential</option><option>Small business</option></select></div></div>
-            <div class="field"><label for="service">How can we help? <span>*</span></label><select id="service" name="service" required><option value="" disabled selected>Select a service</option><option>CCTV cameras</option><option>Intruder alarms</option><option>Preventative maintenance</option><option>Not sure yet</option></select></div>
-            <div class="field"><label for="message">A little about the job <span>*</span></label><textarea id="message" name="message" placeholder="Tell us about your property, suburb and what you'd like to do..." rows="4" required></textarea></div>
-            <button class="form-submit" type="submit">Prepare enquiry <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
-            <p class="form-feedback" role="status" aria-live="polite" id="formFeedback"></p>
-            <p class="form-disclaimer">Website preview: this form is not connected to an inbox yet. No details are saved or sent from this demo.</p>
+          <form id="enquiryForm" novalidate data-mode="preview">
+            <div class="field-row"><div class="field"><label for="fullName">Your name <span aria-hidden="true">*</span></label><input id="fullName" name="name" autocomplete="name" placeholder="Full name" required maxlength="100" aria-describedby="fullName-error"><p class="field-error" id="fullName-error" hidden></p></div><div class="field"><label for="email">Email address <span aria-hidden="true">*</span></label><input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required maxlength="160" aria-describedby="email-error"><p class="field-error" id="email-error" hidden></p></div></div>
+            <div class="field-row"><div class="field"><label for="phone">Phone <span class="optional">(optional)</span></label><input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="04xx xxx xxx" maxlength="20" pattern="[0-9+()\s\-]{8,20}" aria-describedby="phone-error"><p class="field-error" id="phone-error" hidden></p></div><div class="field"><label for="suburb">Suburb <span aria-hidden="true">*</span></label><input id="suburb" name="suburb" autocomplete="address-level2" placeholder="e.g. Carindale" required maxlength="60" aria-describedby="suburb-error"><p class="field-error" id="suburb-error" hidden></p></div></div>
+            <div class="field-row"><div class="field"><label for="service">Service needed <span aria-hidden="true">*</span></label><select id="service" name="service" required aria-describedby="service-error"><option value="" disabled selected>Select a service</option><option>CCTV installation</option><option>Intruder alarms</option><option>Preventative maintenance</option><option>General enquiry</option></select><p class="field-error" id="service-error" hidden></p></div><div class="field"><label for="property">Property type <span aria-hidden="true">*</span></label><select id="property" name="property_type" required aria-describedby="property-error"><option value="" disabled selected>Choose an option</option><option>Residential</option><option>Small business</option></select><p class="field-error" id="property-error" hidden></p></div></div>
+            <div class="field"><label for="message">A little about the job <span aria-hidden="true">*</span></label><textarea id="message" name="message" placeholder="What would you like to do? If you have an existing system, its brand helps." rows="4" required minlength="10" maxlength="2000" aria-describedby="message-error"></textarea><p class="field-error" id="message-error" hidden></p></div>
+            <div class="form-trap" aria-hidden="true"><label for="website">Leave this field empty</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+            <div class="form-turnstile" id="turnstileWidget"></div>
+            <p class="form-required-note"><span aria-hidden="true">*</span> Required</p>
+            <button class="form-submit" type="submit" id="formSubmit"><span class="form-submit-label">Send enquiry</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button>
+            <p class="form-feedback" role="status" aria-live="polite" id="formFeedback" tabindex="-1"></p>
+            <p class="form-disclaimer" id="formNote"><span class="form-preview-note">Website preview: this form is not connected to an inbox yet. No details are saved or sent.</span> <span>Your details are used only to respond to your enquiry. See the <a href="privacy.html">privacy notice</a>.</span></p>
           </form>
         </div>
       </div>
@@ -173,7 +205,7 @@
       </svg>
     </a>
     <p>Practical electronic security for homes and small businesses in Brisbane.</p>
-    <div class="footer-links"><a href="#services">Services</a><a href="#approach">Our approach</a><a href="#faq">FAQs</a><a href="#contact">Contact</a></div>
+    <div class="footer-links"><a href="#services">Services</a><a href="#approach">Our approach</a><a href="#faq">FAQs</a><a href="#contact">Contact</a><a href="privacy.html">Privacy</a></div>
   </div><div class="container footer-bottom"><span>© <span id="year">2026</span> ASTO Security. All rights reserved.</span><span>Brisbane, Queensland</span><a href="#top">Back to top ↑</a></div></footer>
 </body>
 </html>

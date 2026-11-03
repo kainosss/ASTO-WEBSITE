@@ -7,3 +7,8 @@ node_modules/
 Thumbs.db
 *.log
 .wrangler/
+
+# Completed business documents contain customer details: never commit them.
+docs/business-templates/completed/
+*.completed.html
+*.pdf
