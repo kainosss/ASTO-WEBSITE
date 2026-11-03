@@ -7,13 +7,14 @@
  *                               admin@astosec.com (recipient is fixed inside Apps Script, not here).
  *
  * Configuration (Cloudflare secrets; never committed to the repository):
- *   FORM_ENABLED              "true" to accept enquiries. Unset (or anything else) keeps the form disabled.
+ *   FORM_ENABLED              "true" to accept enquiries (any capitalisation; spaces ignored). Anything else keeps it off.
  *   TURNSTILE_SITE_KEY        public Turnstile site key (sent to the browser)
  *   TURNSTILE_SECRET_KEY      private Turnstile secret key
- *   APPS_SCRIPT_URL           the Apps Script web app URL (https://script.google.com/macros/s/…/exec)
+ *   APPS_SCRIPT_URL           the Apps Script web app URL (…/macros/s/…/exec or …/a/macros/<domain>/s/…/exec)
  *   APPS_SCRIPT_SHARED_SECRET random string (32+ characters) also stored in the Apps Script's properties
  *
- * Privacy: this Worker never logs names, emails, phone numbers or messages; only short error codes.
+ * Privacy: this Worker never logs names, emails, phone numbers, messages or setting values; only short error
+ * codes and, when the form is off, the names of settings that need attention (see Workers Logs).
  */
 
 export const SERVICES = ['CCTV installation', 'Intruder alarms', 'Preventative maintenance', 'General enquiry'];
@@ -23,7 +24,10 @@ const MAX_BODY_BYTES = 10_000;
 const MIN_FILL_MS = 3000;
 const TURNSTILE_ACTION = 'enquiry';
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-const APPS_SCRIPT_URL = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
+// Apps Script web app URLs come in two forms; Google Workspace accounts usually get the second:
+//   https://script.google.com/macros/s/<id>/exec
+//   https://script.google.com/a/macros/<domain>/s/<id>/exec
+const APPS_SCRIPT_URL = /^https:\/\/script\.google\.com\/(?:a\/macros\/[A-Za-z0-9.-]+|macros)\/s\/[A-Za-z0-9_-]+\/exec$/;
 const EMAIL = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[A-Za-z]{2,}$/;
 const PHONE = /^[0-9+()\s-]{8,20}$/;
 
@@ -32,11 +36,67 @@ const json = (body, status = 200) => new Response(JSON.stringify(body), {
   headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' },
 });
 
+const SETTING_NAMES = ['FORM_ENABLED', 'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'APPS_SCRIPT_URL', 'APPS_SCRIPT_SHARED_SECRET'];
+
+/**
+ * Read the five dashboard settings, tolerating what the dashboard commonly adds when values are pasted:
+ * surrounding spaces or line breaks, "True"/"TRUE", a JSON-type boolean, and a "?usp=…" suffix on the URL.
+ */
+export function readSettings(env) {
+  const get = name => (env && env[name] != null ? String(env[name]).trim() : '');
+  const url = get('APPS_SCRIPT_URL').replace(/[?#].*$/, '');
+  return {
+    formEnabled: get('FORM_ENABLED').toLowerCase() === 'true',
+    turnstileSiteKey: get('TURNSTILE_SITE_KEY'),
+    turnstileSecretKey: get('TURNSTILE_SECRET_KEY'),
+    appsScriptUrl: APPS_SCRIPT_URL.test(url) ? url : '',
+    appsScriptUrlPresent: Boolean(url),
+    sharedSecret: get('APPS_SCRIPT_SHARED_SECRET'),
+  };
+}
+
+/** Names (never values) of settings that keep the form disabled. Empty array = form can be enabled. */
+export function configIssues(env) {
+  const s = readSettings(env);
+  const issues = [];
+  if (!s.formEnabled) issues.push('FORM_ENABLED is not "true"');
+  if (!s.turnstileSiteKey) issues.push('TURNSTILE_SITE_KEY is missing');
+  if (!s.turnstileSecretKey) issues.push('TURNSTILE_SECRET_KEY is missing');
+  if (!s.appsScriptUrlPresent) issues.push('APPS_SCRIPT_URL is missing');
+  else if (!s.appsScriptUrl) issues.push('APPS_SCRIPT_URL is not an Apps Script web app URL ending in /exec');
+  if (!s.sharedSecret) issues.push('APPS_SCRIPT_SHARED_SECRET is missing');
+  else if (s.sharedSecret.length < 32) issues.push('APPS_SCRIPT_SHARED_SECRET is shorter than 32 characters');
+  return issues;
+}
+
 export function isConfigured(env) {
-  return env.FORM_ENABLED === 'true'
-    && Boolean(env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY)
-    && APPS_SCRIPT_URL.test(env.APPS_SCRIPT_URL || '')
-    && String(env.APPS_SCRIPT_SHARED_SECRET || '').length >= 32;
+  return configIssues(env).length === 0;
+}
+
+/*
+ * TEMPORARY setup diagnostics: remove before the public launch (docs/launch-checklist.md).
+ * While the form is off, /api/enquiry/config also reports the STATUS of each setting so the owner can see
+ * which one needs attention. It reports only "ok" / "missing" / "invalid" and never any part of a value.
+ */
+export const SETUP_DIAGNOSTICS = true;
+export function settingStatus(env) {
+  const raw = name => (env && env[name] != null ? String(env[name]).trim() : '');
+  const s = readSettings(env);
+  return {
+    FORM_ENABLED: !raw('FORM_ENABLED') ? 'missing' : s.formEnabled ? 'ok' : 'invalid (must be true)',
+    TURNSTILE_SITE_KEY: s.turnstileSiteKey ? 'ok' : 'missing',
+    TURNSTILE_SECRET_KEY: s.turnstileSecretKey ? 'ok' : 'missing',
+    APPS_SCRIPT_URL: !s.appsScriptUrlPresent ? 'missing' : s.appsScriptUrl ? 'ok' : 'invalid (not an Apps Script /exec URL)',
+    APPS_SCRIPT_SHARED_SECRET: !s.sharedSecret ? 'missing' : s.sharedSecret.length >= 32 ? 'ok' : 'invalid (shorter than 32 characters)',
+  };
+}
+
+// When at least one setting has been added but the form is still off, log which settings need attention
+// (names only, never values) so the owner can see the reason in Cloudflare's Workers Logs.
+function logConfigIssues(env, issues) {
+  if (issues.length && SETTING_NAMES.some(name => env && env[name] != null && String(env[name]).trim() !== '')) {
+    console.warn(`enquiry_form_disabled: ${issues.join('; ')}`);
+  }
 }
 
 // Remove control characters (incl. CR/LF, which could otherwise inject email headers) and trim.
@@ -68,10 +128,10 @@ export function validateEnquiry(input) {
   return Object.keys(errors).length ? { errors } : { enquiry: e };
 }
 
-async function verifyTurnstile(token, request, env) {
+async function verifyTurnstile(token, request, settings) {
   if (!token || typeof token !== 'string' || token.length > 2048) return false;
   const form = new FormData();
-  form.append('secret', env.TURNSTILE_SECRET_KEY);
+  form.append('secret', settings.turnstileSecretKey);
   form.append('response', token);
   const ip = request.headers.get('CF-Connecting-IP');
   if (ip) form.append('remoteip', ip);
@@ -86,12 +146,12 @@ async function verifyTurnstile(token, request, env) {
   }
 }
 
-async function sendViaAppsScript(enquiry, env) {
+async function sendViaAppsScript(enquiry, settings) {
   try {
-    const res = await fetch(env.APPS_SCRIPT_URL, {
+    const res = await fetch(settings.appsScriptUrl, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ secret: env.APPS_SCRIPT_SHARED_SECRET, enquiry }),
+      body: JSON.stringify({ secret: settings.sharedSecret, enquiry }),
       redirect: 'follow', // Apps Script answers via a redirect to script.googleusercontent.com
       signal: AbortSignal.timeout(20000),
     });
@@ -104,7 +164,12 @@ async function sendViaAppsScript(enquiry, env) {
 }
 
 export async function handleEnquiry(request, env) {
-  if (!isConfigured(env)) return json({ ok: false, error: 'disabled' }, 503);
+  const issues = configIssues(env);
+  if (issues.length) {
+    logConfigIssues(env, issues);
+    return json({ ok: false, error: 'disabled' }, 503);
+  }
+  const settings = readSettings(env);
 
   const origin = request.headers.get('Origin');
   if (!origin || origin !== new URL(request.url).origin) return json({ ok: false, error: 'forbidden' }, 403);
@@ -124,9 +189,9 @@ export async function handleEnquiry(request, env) {
   const { enquiry, errors } = validateEnquiry(body);
   if (errors) return json({ ok: false, error: 'invalid', fields: errors }, 422);
 
-  if (!(await verifyTurnstile(body.turnstileToken, request, env))) return json({ ok: false, error: 'verification_failed' }, 403);
+  if (!(await verifyTurnstile(body.turnstileToken, request, settings))) return json({ ok: false, error: 'verification_failed' }, 403);
 
-  const sent = await sendViaAppsScript(enquiry, env);
+  const sent = await sendViaAppsScript(enquiry, settings);
   if (!sent.ok) {
     console.error(`enquiry_send_failed ${sent.code}`); // error code only; never customer details
     return json({ ok: false, error: 'send_failed' }, 502);
@@ -139,8 +204,12 @@ export default {
     const { pathname } = new URL(request.url);
     if (pathname === '/api/enquiry/config') {
       if (request.method !== 'GET' && request.method !== 'HEAD') return json({ ok: false, error: 'method_not_allowed' }, 405);
-      const enabled = isConfigured(env);
-      return json({ enabled, turnstileSiteKey: enabled ? env.TURNSTILE_SITE_KEY : '' });
+      const issues = configIssues(env);
+      logConfigIssues(env, issues);
+      const enabled = issues.length === 0;
+      const body = { enabled, turnstileSiteKey: enabled ? readSettings(env).turnstileSiteKey : '' };
+      if (SETUP_DIAGNOSTICS && !enabled) body.settings = settingStatus(env);
+      return json(body);
     }
     if (pathname === '/api/enquiry') {
       if (request.method !== 'POST') return json({ ok: false, error: 'method_not_allowed' }, 405);

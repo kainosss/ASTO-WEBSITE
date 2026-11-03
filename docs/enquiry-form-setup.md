@@ -151,6 +151,13 @@ Settings saved in the dashboard stay in place when future GitHub changes are dep
    messages.
 9. If anything fails, tell Claude the **error message shown on the page** (never the secrets).
 
+**If the form stays off after adding all five settings:** open `/api/enquiry/config`. While the
+form is off, it lists each setting's status (`ok`, `missing` or `invalid …`) without showing any
+values, so you can see which one to fix. Cloudflare's **Workers Logs** for asto-website show the same
+names. The Worker accepts both Apps Script URL formats (`…/macros/s/…/exec` and
+`…/a/macros/astosec.com/s/…/exec`), ignores spaces or line breaks pasted around values, and
+accepts `true` in any capitalisation.
+
 While the form is on, anyone with the workers.dev address can send an enquiry. The site isn't
 indexed by search engines and isn't on astosec.com yet. If you're not ready for real customers
 after testing, switch the form off (below) until you are.

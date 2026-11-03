@@ -45,14 +45,17 @@ subscription: Cloudflare Workers Free, Turnstile and Apps Script (included in Go
    (`https://YOUR-DOMAIN/assets/og-image.jpg`), and add
    `<link rel="canonical" href="https://YOUR-DOMAIN/">` and
    `<meta property="og:url" content="https://YOUR-DOMAIN/">`.
-4. **Enable search indexing:** remove the `X-Robots-Tag: noindex, nofollow` rule from
+4. **Remove the temporary setup diagnostics:** in `worker/index.js`, set `SETUP_DIAGNOSTICS` to
+   `false` (or ask Claude to remove it). They only report setting status ("ok" / "missing" /
+   "invalid"), never values, but aren't needed once the form works.
+5. **Enable search indexing:** remove the `X-Robots-Tag: noindex, nofollow` rule from
    `public/_headers`. Do this only at the approved launch.
-5. Add the five secrets to production and `astosec.com` to the Turnstile hostnames
+6. Add the five secrets to production and `astosec.com` to the Turnstile hostnames
    (`docs/enquiry-form-setup.md`, Part 6), then test HTTPS, the form (one real test enquiry) and the
    sharing preview (paste the URL into a messaging app).
-6. Optional and free: create a Google Business Profile for local search in Brisbane. Use only
+7. Optional and free: create a Google Business Profile for local search in Brisbane. Use only
    genuine details, and decide how to show your service area if you have no shopfront.
-7. Optional: a free Google Search Console account to submit the sitemap.
+8. Optional: a free Google Search Console account to submit the sitemap.
 
 ## D. Keep in mind
 
