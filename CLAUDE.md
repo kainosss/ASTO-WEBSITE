@@ -20,11 +20,13 @@
 - The website lives in `public/`, the only folder Cloudflare serves; keep internal docs like this file outside it.
 - `public/index.html`: all page content and markup.
 - `public/styles.css`: styling and responsive design.
-- `public/config.js`: `formEndpoint` (ASTO's own Formspree URL; empty keeps the form in preview mode) and optional `contactEmail`. Never reuse another business's endpoint.
+- `public/config.js`: optional `contactEmail` only. Never put secrets in `public/`.
+- `worker/index.js`: Cloudflare Worker for `/api/enquiry` (`run_worker_first: ["/api/*"]`); validates input, verifies Turnstile server-side, forwards to the Google Apps Script mailer (`docs/apps-script/`), which emails the fixed recipient admin@astosec.com with MailApp. Secrets (`FORM_ENABLED`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_URL`, `APPS_SCRIPT_SHARED_SECRET`) live only in Cloudflare; previews and production are configured separately and production stays disabled until launch is approved. Never log customer details. Setup: `docs/enquiry-form-setup.md`.
+- Do not change Google Workspace DNS (MX, SPF, DKIM, DMARC), organisation-wide Google sharing settings, or enable Cloudflare Email Routing on astosec.com without the owner's approval.
 - `public/script.js`: mobile menu, section reveal, dynamic copyright year, enquiry form (validation, honeypot, sending/success/error states).
 - `public/privacy.html`, `public/404.html`, `public/robots.txt`: privacy notice, not-found page, crawler rules.
 - `docs/`: launch checklist, enquiry workflow, business templates (never served; the GitHub repo is public, so never commit completed customer documents).
-- Tests: `node tests/site.test.mjs` (Playwright). Tests must intercept form submissions and never send real enquiries.
+- Tests: `node tests/site.test.mjs` (Playwright), `node tests/worker.test.mjs`, `node tests/apps-script.test.mjs`. Tests must mock the enquiry API, Turnstile and Google and never send real enquiries.
 - `public/assets/`: bundled optimised hero photo, plus logos and favicon in `public/assets/branding/`.
 - `public/_headers`: pre-launch `noindex` header; remove only when the owner approves launch.
 - `wrangler.jsonc` (repo root): Cloudflare Workers config for Worker `asto-website`, serving `./public`. Workers Builds preview builds fail without it, so keep it.
@@ -37,7 +39,7 @@
 - Do not claim 24/7 monitoring, emergency response, or servicing of systems not actually confirmed.
 - Queensland licensing and any employer conflict/outside-work obligations need owner review before publication.
 - Never reuse employer/client photographs, site details, device lists, or confidential material without explicit permission.
-- The contact form must **never** falsely confirm a submission. While `formEndpoint` is empty it is clearly marked "not connected yet" and sends nothing; when set, success is shown only after Formspree accepts the enquiry.
+- The contact form must **never** falsely confirm a submission. While the Worker reports it disabled it is clearly marked "not connected yet" and sends nothing; when enabled, success is shown only after Apps Script confirms the email was accepted.
 - For a future live form, request the actual business email and chosen form platform, handle failures, validate data, and implement spam/privacy considerations. Never commit API secrets or credentials.
 - Avoid Google indexing and public deployment until the owner explicitly approves launch. Do not push to GitHub, deploy Cloudflare, register a domain, send real emails, or modify any other project without clear approval.
 

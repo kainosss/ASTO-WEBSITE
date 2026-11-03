@@ -3,29 +3,21 @@
 Everything below needs you (accounts, decisions or details only you can supply). Nothing here has
 been created or invented for you.
 
-## A. Make the enquiry form live (Formspree)
+## A. Make the enquiry form live (Cloudflare Worker + Google Apps Script)
 
-1. **Create ASTO's own Formspree account** with the ASTO business email address. Keep it separate
-   from any other business. Do not reuse another business's form.
-2. **Create a new form**, e.g. "ASTO website enquiries", set to deliver to the ASTO inbox, and
-   confirm the verification email Formspree sends.
-3. **Copy the form's endpoint** (it looks like `https://formspree.io/f/xxxxxxxx`) into
-   `public/config.js` → `formEndpoint`. Optionally set `contactEmail` to show your address beside the
-   form. A form endpoint is not a secret, but never put passwords or API keys in that file.
-4. **Spam settings:** the website already uses a hidden "honeypot" field (`_gotcha`) and a short
-   timing check. The form sends with JavaScript (AJAX). If test submissions fail with a CAPTCHA or
-   reCAPTCHA error, turn reCAPTCHA off in that form's Formspree settings. If your plan lets you
-   restrict submissions to your own domain, add the live domain once you have it.
-5. **Check the plan limits.** Formspree's free plan has a monthly submission limit. Check the
-   current pricing and decide whether you need to upgrade. That is a cost decision for you.
-6. **Test from the Cloudflare preview link**, using your own details. Check that:
-   - the button shows "Sending…", then the green "Your enquiry has been sent" message;
-   - the email arrives with the subject `New ASTO enquiry: <service> – <suburb>` and all fields;
-   - replying goes to the address you entered;
-   - submitting with no internet connection shows the red error, and your details stay in the form.
+Follow **`docs/enquiry-form-setup.md`** step by step. In short:
 
-   Then delete the test submissions in Formspree.
-7. Set up the email filters in `docs/enquiry-workflow.md`.
+1. Create a strong shared secret in your password manager.
+2. Create and deploy the Google Apps Script as admin@astosec.com (web app; Execute as: Me; Who has
+   access: Anyone), and store the shared secret in its Script Properties.
+3. Create a Cloudflare Turnstile widget for the preview hostname.
+4. Add the five secrets to the **preview only** (`FORM_ENABLED`, `TURNSTILE_SITE_KEY`,
+   `TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_URL`, `APPS_SCRIPT_SHARED_SECRET`).
+5. Test genuine enquiries end to end on the preview, including a failure test.
+6. Production stays disabled (no secrets) until you approve launch.
+
+No DNS records and no organisation-wide Google sharing settings are changed. There is no extra
+subscription: Cloudflare Workers Free, Turnstile and Apps Script (included in Google Workspace).
 
 ## B. Business details (owner review before launch)
 
@@ -34,9 +26,9 @@ been created or invented for you.
       should appear on the website and documents.
 - [ ] Check your employment contract and any outside-work or conflict-of-interest obligations.
 - [ ] Decide whether to publish a phone number and/or email (`contactEmail` in `public/config.js`).
-- [ ] Review the privacy notice (`public/privacy.html`). It describes how the form, Formspree,
-      Cloudflare and Google Fonts are used. Update it if you add analytics, a different form
-      service or a mailing list.
+- [ ] Review the privacy notice (`public/privacy.html`). It describes how the form, Cloudflare
+      (hosting and Turnstile), Google Workspace and Google Fonts are used. Update it if you add
+      analytics, a different form service or a mailing list.
 - [ ] Add your business details to the templates in `docs/business-templates/`.
 - [ ] Consider making the GitHub repository **private**. It is currently public, so anyone can read
       the website code, docs and templates (no secrets or customer data are stored in it).
@@ -53,8 +45,9 @@ been created or invented for you.
    `<meta property="og:url" content="https://YOUR-DOMAIN/">`.
 4. **Enable search indexing:** remove the `X-Robots-Tag: noindex, nofollow` rule from
    `public/_headers`. Do this only at the approved launch.
-5. Test HTTPS, the form (one real test enquiry) and the sharing preview (paste the URL into a
-   messaging app).
+5. Add the five secrets to production and `astosec.com` to the Turnstile hostnames
+   (`docs/enquiry-form-setup.md`, Part 6), then test HTTPS, the form (one real test enquiry) and the
+   sharing preview (paste the URL into a messaging app).
 6. Optional and free: create a Google Business Profile for local search in Brisbane. Use only
    genuine details, and decide how to show your service area if you have no shopfront.
 7. Optional: a free Google Search Console account to submit the sitemap.

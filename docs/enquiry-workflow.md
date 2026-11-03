@@ -11,22 +11,23 @@ promised response times.
 3. Enters their name, email, optional phone and a short description of the job, then selects
    **Send enquiry**.
 4. Sees the on-screen confirmation *"Thank you. Your enquiry has been sent…"*. It appears **only**
-   after Formspree confirms that it accepted the enquiry. If sending fails, they see an error, and
-   their details stay in the form so they can try again.
+   after the email has been accepted for delivery to the ASTO inbox. If sending fails, they see an
+   error, and their details stay in the form so they can try again.
 
-The website does not send the customer a confirmation email. Formspree can do this on some paid
-plans. If you add it later, keep the wording free of response-time promises.
+The website does not send the customer a confirmation email. If you add one later, keep the
+wording free of response-time promises.
 
 ## 2. What you receive
 
-Each enquiry arrives as an email from Formspree in the ASTO inbox you registered with Formspree.
+Each enquiry arrives in **admin@astosec.com**, from **ASTO Security website &lt;admin@astosec.com&gt;**
+(sent by your own Google Workspace account through the Apps Script mailer).
 
 - **Subject:** `New ASTO enquiry: <service> – <suburb>`, for example
   `New ASTO enquiry: CCTV installation – Carindale`.
 - **Fields, in this order:** service, name, email, phone ("Not supplied" if left blank), suburb,
   property type and message.
-- **Reply:** Formspree normally sets the reply-to address to the customer's email, so you can answer
-  directly. Check this with your first test enquiry.
+- **Reply:** the customer's email is set as the Reply-To address, so selecting **Reply** answers
+  them directly.
 
 This gives you enough to make first contact and prepare a quote: who the customer is, how to reach
 them, where they are, what kind of property it is and what they want done.
@@ -104,6 +105,6 @@ Edit these to suit. They make no promises about response times or outcomes.
 
 - Use enquiry details only to respond and to quote (this matches the website's privacy notice).
 - Never ask customers to email alarm codes, passwords or remote-access logins.
-- Delete enquiries and spreadsheet rows you no longer need, and keep the inbox and the Formspree
-  account protected with strong, unique passwords and two-factor authentication.
+- Delete enquiries and spreadsheet rows you no longer need, and keep the Google Workspace and
+  Cloudflare accounts protected with strong, unique passwords and two-factor authentication.
 - Don't store customer documents in the website's GitHub repository. It is public.

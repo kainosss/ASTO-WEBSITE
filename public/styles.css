@@ -149,6 +149,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .field [aria-invalid="true"]{border-color:#c0473b;background:#fffafa}
 .form-required-note{font-size:13px;color:var(--muted);margin:-4px 0 16px}
 .form-trap{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+.form-turnstile:empty{display:none}.form-turnstile{margin:0}
 .form-submit:disabled{opacity:.7;cursor:progress}
 .form-feedback{padding:0}.form-feedback:focus{outline:none}
 .form-feedback[data-state]{border-radius:5px;padding:11px 13px;font-weight:600}

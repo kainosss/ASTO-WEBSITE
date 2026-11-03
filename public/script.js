@@ -1,5 +1,5 @@
 /* ASTO SECURITY — site behaviour. Configuration lives in config.js (window.ASTO_CONFIG). */
-const SITE_CONFIG = Object.assign({ formEndpoint: '', contactEmail: '' }, window.ASTO_CONFIG || {});
+const SITE_CONFIG = Object.assign({ contactEmail: '' }, window.ASTO_CONFIG || {});
 
 const mobileToggle = document.getElementById('mobileToggle');
 const mobileNav = document.getElementById('mobileNav');
@@ -48,18 +48,19 @@ document.querySelectorAll('a[data-property]').forEach(link => link.addEventListe
 }));
 
 /* ---------- Enquiry form ----------
- * Live only when formEndpoint is a Formspree form URL. Otherwise the form stays in preview mode and
- * sends nothing. A success message is shown only after Formspree accepts the submission. */
+ * The form is live only when the site's Worker reports it is enabled (GET /api/enquiry/config). Otherwise it
+ * stays in preview mode and sends nothing. Submissions go to POST /api/enquiry, which verifies Cloudflare
+ * Turnstile and emails the enquiry; a success message is shown only when the server confirms the email was sent. */
 const form = document.getElementById('enquiryForm');
 const formFeedback = document.getElementById('formFeedback');
 const submitButton = document.getElementById('formSubmit');
 const submitLabel = submitButton.querySelector('.form-submit-label');
-const FORMSPREE_URL = /^https:\/\/formspree\.io\/f\/[A-Za-z0-9]+$/;
-const endpoint = FORMSPREE_URL.test(SITE_CONFIG.formEndpoint || '') ? SITE_CONFIG.formEndpoint : '';
-if (SITE_CONFIG.formEndpoint && !endpoint) console.warn('ASTO: formEndpoint is not a Formspree form URL; the enquiry form stays in preview mode.');
-form.dataset.mode = endpoint ? 'live' : 'preview';
+const turnstileBox = document.getElementById('turnstileWidget');
 const openedAt = Date.now();
 let sending = false;
+let liveMode = false;
+let turnstileToken = '';
+let turnstileWidgetId = null;
 
 const MESSAGES = {
   name: 'Please enter your name.',
@@ -70,7 +71,7 @@ const MESSAGES = {
   property_type: 'Please choose a property type.',
   message: 'Please tell us a little about the job (at least 10 characters).',
 };
-const fields = [...form.querySelectorAll('input:not([name="_gotcha"]), select, textarea')];
+const fields = [...form.querySelectorAll('input:not([name="website"]), select, textarea')];
 
 function setFieldError(field, message) {
   const error = document.getElementById(`${field.id}-error`);
@@ -102,6 +103,39 @@ function setSending(on) {
   form.setAttribute('aria-busy', String(on));
   submitLabel.textContent = on ? 'Sending…' : 'Send enquiry';
 }
+function resetTurnstile() {
+  turnstileToken = '';
+  if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
+}
+
+// Turn the form on only when the Worker says it is enabled, then load Cloudflare Turnstile.
+async function enableLiveForm() {
+  let config;
+  try {
+    const res = await fetch('/api/enquiry/config', { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    if (!res.ok) return;
+    config = await res.json();
+  } catch { return; }
+  if (!config || config.enabled !== true || !config.turnstileSiteKey) return;
+  window.onAstoTurnstileLoad = () => {
+    turnstileWidgetId = window.turnstile.render(turnstileBox, {
+      sitekey: config.turnstileSiteKey,
+      action: 'enquiry',
+      appearance: 'interaction-only',
+      callback: token => { turnstileToken = token; },
+      'expired-callback': () => { turnstileToken = ''; },
+      'error-callback': () => { turnstileToken = ''; },
+    });
+    liveMode = true;
+    form.dataset.mode = 'live';
+  };
+  const script = document.createElement('script');
+  script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onAstoTurnstileLoad';
+  script.async = true;
+  script.defer = true;
+  document.head.append(script);
+}
+enableLiveForm();
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
@@ -112,17 +146,22 @@ form.addEventListener('submit', async event => {
     invalid[0].focus();
     return;
   }
-  if (!endpoint) {
+  if (!liveMode) {
     showFeedback('This is a website preview. The enquiry form is not connected yet, so your details have not been sent.', 'preview');
     return;
   }
   // Simple spam checks: the hidden field is only ever filled in by bots, and people take more than a few seconds.
-  if (form.elements._gotcha.value) {
+  if (form.elements.website.value) {
     showFeedback('Sorry, your enquiry could not be sent. Please try again.', 'error');
     return;
   }
-  if (Date.now() - openedAt < 3000) {
+  const elapsedMs = Date.now() - openedAt;
+  if (elapsedMs < 3000) {
     showFeedback('Please take a moment to check your details, then select Send enquiry again.', 'error');
+    return;
+  }
+  if (!turnstileToken) {
+    showFeedback('Please wait a moment while we check this form is being used by a person, then select Send enquiry again.', 'error');
     return;
   }
 
@@ -131,47 +170,49 @@ form.addEventListener('submit', async event => {
     service: get('service'),
     name: get('name'),
     email: get('email'),
-    phone: get('phone') || 'Not supplied',
+    phone: get('phone'),
     suburb: get('suburb'),
     property_type: get('property_type'),
     message: get('message'),
-    _subject: `New ASTO enquiry: ${get('service')} – ${get('suburb')}`,
+    website: form.elements.website.value,
+    elapsedMs,
+    turnstileToken,
   };
 
   setSending(true);
   showFeedback('Sending your enquiry…', 'sending');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
+  const timer = setTimeout(() => controller.abort(), 30000);
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch('/api/enquiry', {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
-    if (response.ok) {
+    const result = await response.json().catch(() => null);
+    if (response.ok && result && result.ok === true) {
       form.reset();
       fields.forEach(field => setFieldError(field, ''));
       showFeedback('Thank you. Your enquiry has been sent. We will reply by email or phone after reviewing your details.', 'success');
       formFeedback.focus();
       return;
     }
-    let detail = '';
-    try {
-      const body = await response.json();
-      if (Array.isArray(body.errors)) {
-        body.errors.forEach(err => {
-          const field = err.field && form.elements[err.field];
-          if (field && fields.includes(field)) setFieldError(field, err.message || MESSAGES[err.field]);
-        });
-        detail = body.errors.map(err => err.message).filter(Boolean).join(' ');
-      }
-    } catch { /* non-JSON error body */ }
-    showFeedback(`Sorry, your enquiry could not be sent${detail ? `: ${detail}` : '.'} Please check your details and try again.`, 'error');
+    if (result && result.fields) {
+      Object.entries(result.fields).forEach(([name, message]) => {
+        const field = form.elements[name];
+        if (field && fields.includes(field)) setFieldError(field, message);
+      });
+    }
+    const reason = result && result.error === 'verification_failed'
+      ? 'the security check did not complete'
+      : result && result.error === 'invalid' ? 'some details need checking' : '';
+    showFeedback(`Sorry, your enquiry could not be sent${reason ? ` because ${reason}` : ''}. Please check your details and try again. Your details are still in the form.`, 'error');
   } catch {
     showFeedback('Sorry, your enquiry could not be sent. Please check your internet connection and try again. Your details are still in the form.', 'error');
   } finally {
     clearTimeout(timer);
+    resetTurnstile();
     setSending(false);
   }
 });
