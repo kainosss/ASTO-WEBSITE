@@ -28,7 +28,8 @@
 - `docs/`: launch checklist, enquiry workflow, business templates (never served; the GitHub repo is public, so never commit completed customer documents).
 - Tests: `node tests/site.test.mjs` (Playwright), `node tests/worker.test.mjs`, `node tests/apps-script.test.mjs`. Tests must mock the enquiry API, Turnstile and Google and never send real enquiries.
 - `public/assets/`: bundled optimised hero photo, plus logos and favicon in `public/assets/branding/`.
-- `public/_headers`: pre-launch `noindex` header; remove only when the owner approves launch.
+- `public/_headers`: pre-launch `noindex` header (remove only when the owner approves public indexing) plus security headers; the Content-Security-Policy is report-only until the live-domain check in `docs/launch-checklist.md`.
+- The public `/api/enquiry/config` response must stay `{enabled, turnstileSiteKey}` only: never expose setting names, statuses or values to visitors.
 - `wrangler.jsonc` (repo root): Cloudflare Workers config for Worker `asto-website`, serving `./public`. Workers Builds preview builds fail without it, so keep it.
 - Preview by opening `public/index.html`, or serve locally with `python -m http.server 8000 --directory public` and visit `http://localhost:8000`.
 - Prefer small, targeted changes. Ask before introducing a framework, backend or paid third-party service.

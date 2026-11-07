@@ -1,65 +1,102 @@
-# ASTO Security: launch checklist
+# ASTO Security: public launch checklist
 
-Everything below needs you (accounts, decisions or details only you can supply). Nothing here has
-been created or invented for you.
+Work through these in order. Items marked **(owner)** need your accounts, decisions or business
+details. None of them can be completed from the code. Nothing here changes DNS, Google Workspace
+email records or Cloudflare secrets unless the step says so.
 
-## A. Make the enquiry form live (Cloudflare Worker + Google Apps Script)
+Current state:
+- The enquiry form works in production: Worker, Turnstile and Apps Script, delivering to
+  admin@astosec.com.
+- Search indexing is still **blocked** by `X-Robots-Tag: noindex, nofollow` in `public/_headers`.
 
-Follow **`docs/enquiry-form-setup.md`** step by step. In short:
+## 1. Business and operational readiness (owner)
 
-1. Create a strong shared secret in your password manager.
-2. Create and deploy the Google Apps Script as admin@astosec.com (web app; Execute as: Me; Who has
-   access: Anyone), and store the shared secret in its Script Properties.
-3. Create a Cloudflare Turnstile widget for the production workers.dev hostname.
-4. Merge the pull request. The Worker deploys with the form **off**; check `/api/enquiry/config`
-   shows `{"enabled":false…}`.
-5. In the Cloudflare dashboard (Production → Variables and secrets), add `TURNSTILE_SITE_KEY`,
-   `TURNSTILE_SECRET_KEY`, `APPS_SCRIPT_URL` and `APPS_SCRIPT_SHARED_SECRET` as secrets.
-6. Add `FORM_ENABLED` = `true` to switch the form on, then test genuine enquiries, including a
-   failure test. Delete `FORM_ENABLED` to switch it off again at any time.
-
-No DNS records and no organisation-wide Google sharing settings are changed. There is no extra
-subscription: Cloudflare Workers Free, Turnstile and Apps Script (included in Google Workspace).
-
-## B. Business details (owner review before launch)
-
-- [ ] Confirm the final business name and structure, and your ABN.
-- [ ] Confirm Queensland security licensing for the work offered, and whether a licence number
+- [ ] Business insurance in place (public liability, and professional indemnity if relevant).
+- [ ] Business name, structure and ABN confirmed.
+- [ ] Queensland security licensing confirmed for the work offered. Decide whether a licence number
       should appear on the website and documents.
-- [ ] Check your employment contract and any outside-work or conflict-of-interest obligations.
-- [ ] Decide whether to publish a phone number and/or email (`contactEmail` in `public/config.js`).
-- [ ] Review the privacy notice (`public/privacy.html`). It describes how the form, Cloudflare
-      (hosting and Turnstile), Google Workspace and Google Fonts are used. Update it if you add
-      analytics, a different form service or a mailing list.
-- [ ] Add your business details to the templates in `docs/business-templates/`.
-- [ ] Consider making the GitHub repository **private**. It is currently public, so anyone can read
-      the website code, docs and templates (no secrets or customer data are stored in it).
+- [ ] Employment contract and any outside-work or conflict-of-interest obligations checked.
+- [ ] Business details added to the templates in `docs/business-templates/`.
+- [ ] Enquiry routine ready: email filters and reply templates (`docs/enquiry-workflow.md`).
 
-## C. Domain and launch (only when you approve)
+## 2. Confirm astosec.com works (owner)
 
-1. Register or choose the domain, then add it to the `asto-website` Worker in Cloudflare
-   (Workers → asto-website → Settings → Domains & Routes).
-2. Replace `YOUR-DOMAIN` in `docs/launch/sitemap.template.xml`, save it as `public/sitemap.xml`,
-   and uncomment the `Sitemap:` line in `public/robots.txt`.
-3. In `public/index.html`, change `og:image` to the full address
-   (`https://YOUR-DOMAIN/assets/og-image.jpg`), and add
-   `<link rel="canonical" href="https://YOUR-DOMAIN/">` and
-   `<meta property="og:url" content="https://YOUR-DOMAIN/">`.
-4. **Remove the temporary setup diagnostics:** in `worker/index.js`, set `SETUP_DIAGNOSTICS` to
-   `false` (or ask Claude to remove it). They only report setting status ("ok" / "missing" /
-   "invalid"), never values, but aren't needed once the form works.
-5. **Enable search indexing:** remove the `X-Robots-Tag: noindex, nofollow` rule from
-   `public/_headers`. Do this only at the approved launch.
-6. Add the five secrets to production and `astosec.com` to the Turnstile hostnames
-   (`docs/enquiry-form-setup.md`, Part 6), then test HTTPS, the form (one real test enquiry) and the
-   sharing preview (paste the URL into a messaging app).
-7. Optional and free: create a Google Business Profile for local search in Brisbane. Use only
-   genuine details, and decide how to show your service area if you have no shopfront.
-8. Optional: a free Google Search Console account to submit the sitemap.
+- [ ] In Cloudflare → **Workers & Pages → asto-website → Settings → Domains & Routes**, check that
+      `astosec.com` is attached as a custom domain. Add `www.astosec.com` too if you want it.
+      Adding a custom domain creates its own DNS record; **don't change the existing Google
+      Workspace MX, SPF, DKIM or DMARC records.**
+- [ ] Choose **one** main address. The site's canonical tags, sitemap and sharing preview use
+      `https://astosec.com/`. If you add `www`, redirect it to `https://astosec.com/` (Cloudflare →
+      Rules → Redirect Rules).
+- [ ] Open `https://astosec.com/` and check the padlock (HTTPS), the homepage, `/privacy`, and that
+      a made-up address (e.g. `/test`) shows the "Page not found" page.
+- [ ] Optional: in Cloudflare → SSL/TLS, turn on **Always Use HTTPS**. Consider **HSTS** once
+      you're sure HTTPS works on every hostname you use.
 
-## D. Keep in mind
+## 3. Turnstile authorises the public domain (owner)
 
-- Workers Builds deploys production automatically when changes are merged into `main`. Turn that
-  off in the Worker's build settings if you want merges to stay unpublished until launch.
-- The `*.workers.dev` preview and production addresses are public to anyone with the link. The
-  noindex header keeps them out of search results, but it is not a password.
+- [ ] Cloudflare → **Turnstile → ASTO website → Hostnames**: add `astosec.com`, plus
+      `www.astosec.com` if it serves the site rather than redirecting. Keep the workers.dev
+      hostname for now.
+- [ ] Don't change the Turnstile keys or the Worker's secrets.
+
+## 4. Enquiry form works on the public domain (owner)
+
+- [ ] On `https://astosec.com/`, send one enquiry per service (CCTV, intruder alarms,
+      preventative maintenance) using a personal email address.
+- [ ] Check each arrives in admin@astosec.com from "ASTO Security website", with the subject
+      `New ASTO enquiry: <service> – <suburb>`, and that **Reply** goes to the customer.
+- [ ] Open the browser's developer console (F12 → Console) during the test. If there are **no
+      Content-Security-Policy warnings**, ask Claude to switch the CSP from report-only to enforced
+      (a one-line change in `public/_headers`).
+- [ ] `https://astosec.com/api/enquiry/config` should show only
+      `{"enabled":true,"turnstileSiteKey":"…"}`. The site key is public by design.
+
+## 5. Privacy notice and contact details (owner)
+
+- [ ] Read `/privacy`. It describes the enquiry form, Cloudflare (hosting and Turnstile), Google
+      Workspace email and Google Fonts. Update it if you add analytics, a mailing list or another
+      service.
+- [ ] Decide whether to show a contact email or phone number. To show an email, set `contactEmail`
+      in `public/config.js`, e.g. `'admin@astosec.com'`. Use only confirmed details.
+
+## 6. Sitemap (ready)
+
+- [x] `public/sitemap.xml` lists `https://astosec.com/` and `https://astosec.com/privacy`, and
+      `public/robots.txt` points to it.
+- [ ] After the domain works, open `https://astosec.com/sitemap.xml` to confirm it loads.
+
+## 7. Remove `noindex`: only with explicit owner approval
+
+- [ ] When you approve public indexing, ask Claude to remove **only** the `X-Robots-Tag: noindex,
+      nofollow` line from `public/_headers` (via a pull request). Leave the other security headers.
+- [ ] After it deploys, check `https://astosec.com/` in a header checker, or the browser's
+      developer tools (Network → the page → Response Headers), and confirm `x-robots-tag` is gone.
+
+## 8. Google Search Console (owner, free)
+
+- [ ] Add the property `https://astosec.com/`. Domain verification uses a DNS TXT record; the
+      HTML-tag method avoids a DNS change. Ask before adding DNS records.
+- [ ] Submit `https://astosec.com/sitemap.xml`.
+- [ ] Use **URL Inspection** on the homepage to request indexing.
+
+## 9. Google Business Profile (owner, free)
+
+- [ ] Create the profile with genuine details only: business name, category (e.g. "Security system
+      installer"), service area (Brisbane suburbs you cover) and website `https://astosec.com/`.
+- [ ] If you have no shopfront, set it up as a service-area business with your address hidden.
+- [ ] No invented reviews, photos of other people's work or unverified claims.
+
+## 10. Final customer enquiry test (owner)
+
+- [ ] After indexing is approved and live, send one final enquiry from a phone on mobile data.
+- [ ] Reply to it from admin@astosec.com and confirm the reply reaches the "customer" address.
+- [ ] Delete the test enquiries, and record the launch date.
+
+## Keep in mind
+
+- **Turning the form off:** set `FORM_ENABLED` to anything other than `true` (Cloudflare →
+  asto-website → Settings → Variables and secrets) and deploy. Its secrets and settings survive
+  GitHub deployments (`keep_vars: true`).
+- **Production deploys** run automatically when a pull request is merged into `main`.
+- **The GitHub repository is public.** Never commit completed customer documents or secrets.

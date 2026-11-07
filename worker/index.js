@@ -13,8 +13,9 @@
  *   APPS_SCRIPT_URL           the Apps Script web app URL (…/macros/s/…/exec or …/a/macros/<domain>/s/…/exec)
  *   APPS_SCRIPT_SHARED_SECRET random string (32+ characters) also stored in the Apps Script's properties
  *
- * Privacy: this Worker never logs names, emails, phone numbers, messages or setting values; only short error
- * codes and, when the form is off, the names of settings that need attention (see Workers Logs).
+ * Privacy: this Worker never logs names, emails, phone numbers, messages or setting values. Logs contain only
+ * short error codes and, when the form is off, the names (never values) of settings that keep it off. Those
+ * names appear only in the owner's Cloudflare Workers Logs, never in any response to visitors.
  */
 
 export const SERVICES = ['CCTV installation', 'Intruder alarms', 'Preventative maintenance', 'General enquiry'];
@@ -73,30 +74,35 @@ export function isConfigured(env) {
   return configIssues(env).length === 0;
 }
 
-/*
- * TEMPORARY setup diagnostics: remove before the public launch (docs/launch-checklist.md).
- * While the form is off, /api/enquiry/config also reports the STATUS of each setting so the owner can see
- * which one needs attention. It reports only "ok" / "missing" / "invalid" and never any part of a value.
- */
-export const SETUP_DIAGNOSTICS = true;
-export function settingStatus(env) {
-  const raw = name => (env && env[name] != null ? String(env[name]).trim() : '');
-  const s = readSettings(env);
-  return {
-    FORM_ENABLED: !raw('FORM_ENABLED') ? 'missing' : s.formEnabled ? 'ok' : 'invalid (must be true)',
-    TURNSTILE_SITE_KEY: s.turnstileSiteKey ? 'ok' : 'missing',
-    TURNSTILE_SECRET_KEY: s.turnstileSecretKey ? 'ok' : 'missing',
-    APPS_SCRIPT_URL: !s.appsScriptUrlPresent ? 'missing' : s.appsScriptUrl ? 'ok' : 'invalid (not an Apps Script /exec URL)',
-    APPS_SCRIPT_SHARED_SECRET: !s.sharedSecret ? 'missing' : s.sharedSecret.length >= 32 ? 'ok' : 'invalid (shorter than 32 characters)',
-  };
-}
-
 // When at least one setting has been added but the form is still off, log which settings need attention
-// (names only, never values) so the owner can see the reason in Cloudflare's Workers Logs.
+// (names only, never values). This goes only to the owner's Cloudflare Workers Logs, never to visitors.
 function logConfigIssues(env, issues) {
   if (issues.length && SETTING_NAMES.some(name => env && env[name] != null && String(env[name]).trim() !== '')) {
     console.warn(`enquiry_form_disabled: ${issues.join('; ')}`);
   }
+}
+
+// Read at most `limit` bytes of the body, even when no Content-Length header is sent (chunked uploads).
+// Returns null when the body is larger than the limit.
+async function readBodyCapped(request, limit) {
+  if (!request.body) return '';
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) {
+      await reader.cancel().catch(() => {});
+      return null;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder().decode(bytes);
 }
 
 // Remove control characters (incl. CR/LF, which could otherwise inject email headers) and trim.
@@ -138,9 +144,10 @@ async function verifyTurnstile(token, request, settings) {
   try {
     const res = await fetch(TURNSTILE_VERIFY_URL, { method: 'POST', body: form, signal: AbortSignal.timeout(8000) });
     const outcome = await res.json();
+    // The token must be valid, issued for this exact hostname and for the enquiry form's action.
     return outcome.success === true
       && outcome.hostname === new URL(request.url).hostname
-      && (!outcome.action || outcome.action === TURNSTILE_ACTION);
+      && outcome.action === TURNSTILE_ACTION;
   } catch {
     return false;
   }
@@ -157,7 +164,9 @@ async function sendViaAppsScript(enquiry, settings) {
     });
     if (!res.ok) return { ok: false, code: `apps_script_http_${res.status}` };
     const result = await res.json().catch(() => null);
-    return result && result.ok === true ? { ok: true } : { ok: false, code: `apps_script_${(result && result.error) || 'bad_response'}` };
+    if (result && result.ok === true) return { ok: true };
+    const reason = String((result && result.error) || 'bad_response').replace(/[^a-z0-9_]/gi, '').slice(0, 40) || 'bad_response';
+    return { ok: false, code: `apps_script_${reason}` };
   } catch (err) {
     return { ok: false, code: err && err.name === 'TimeoutError' ? 'apps_script_timeout' : 'apps_script_unreachable' };
   }
@@ -176,8 +185,8 @@ export async function handleEnquiry(request, env) {
   if (!(request.headers.get('content-type') || '').toLowerCase().startsWith('application/json')) return json({ ok: false, error: 'unsupported_media_type' }, 415);
   if (Number(request.headers.get('content-length') || 0) > MAX_BODY_BYTES) return json({ ok: false, error: 'too_large' }, 413);
 
-  const raw = await request.text();
-  if (raw.length > MAX_BODY_BYTES) return json({ ok: false, error: 'too_large' }, 413);
+  const raw = await readBodyCapped(request, MAX_BODY_BYTES);
+  if (raw === null) return json({ ok: false, error: 'too_large' }, 413);
   let body;
   try { body = JSON.parse(raw); } catch { return json({ ok: false, error: 'bad_request' }, 400); }
   if (!body || typeof body !== 'object' || Array.isArray(body)) return json({ ok: false, error: 'bad_request' }, 400);
@@ -207,9 +216,8 @@ export default {
       const issues = configIssues(env);
       logConfigIssues(env, issues);
       const enabled = issues.length === 0;
-      const body = { enabled, turnstileSiteKey: enabled ? readSettings(env).turnstileSiteKey : '' };
-      if (SETUP_DIAGNOSTICS && !enabled) body.settings = settingStatus(env);
-      return json(body);
+      // Public response: only whether the form is on and, when it is, the public Turnstile site key.
+      return json({ enabled, turnstileSiteKey: enabled ? readSettings(env).turnstileSiteKey : '' });
     }
     if (pathname === '/api/enquiry') {
       if (request.method !== 'POST') return json({ ok: false, error: 'method_not_allowed' }, 405);
