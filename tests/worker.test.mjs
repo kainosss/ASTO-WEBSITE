@@ -1,7 +1,7 @@
 // ASTO Security: unit tests for the enquiry Worker (worker/index.js).
 // Run: node tests/worker.test.mjs   (Node 20+). Turnstile and Apps Script are mocked; nothing real is called.
 import assert from 'node:assert/strict';
-import worker, { validateEnquiry, isConfigured } from '../worker/index.js';
+import worker, { validateEnquiry, isConfigured, configIssues, settingStatus } from '../worker/index.js';
 
 const ORIGIN = 'https://claude-dazzling-meitner-k2g3cu-asto-website.kainerpersonal.workers.dev';
 const APPS_URL = 'https://script.google.com/macros/s/TESTDEPLOYMENTID_abc-123/exec';
@@ -51,10 +51,10 @@ async function test(name, fn) {
 await test('config endpoint: disabled unless FORM_ENABLED and all secrets are set', async () => {
   for (const env of [{}, { ...ENV, FORM_ENABLED: 'false' }, { ...ENV, TURNSTILE_SECRET_KEY: '' }, { ...ENV, APPS_SCRIPT_SHARED_SECRET: 'short' }, { ...ENV, APPS_SCRIPT_URL: 'https://evil.example/exec' }]) {
     const r = await read(await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), env));
-    assert.deepEqual(r.body, { enabled: false, turnstileSiteKey: '' });
+    assert.equal(r.body.enabled, false); assert.equal(r.body.turnstileSiteKey, '');
   }
   const r = await read(await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), ENV));
-  assert.deepEqual(r.body, { enabled: true, turnstileSiteKey: 'site-key' });
+  assert.deepEqual(r.body, { enabled: true, turnstileSiteKey: 'site-key' }, 'no diagnostics once enabled');
 });
 await test('disabled form (production default) refuses submissions with 503 and calls nothing', async () => {
   const r = await read(await post(VALID, { env: { ASSETS: ENV.ASSETS } }));
@@ -138,6 +138,57 @@ await test('customer details never appear in logs', async () => {
 });
 await test('isConfigured rejects non-Apps-Script URLs', async () => {
   assert.equal(isConfigured({ ...ENV, APPS_SCRIPT_URL: 'https://script.google.com.evil.example/macros/s/x/exec' }), false);
+});
+
+// ---- Regression: production showed enabled:false with all five settings saved in the dashboard ----
+await test('regression: Google Workspace web app URL (/a/macros/<domain>/s/…/exec) is accepted', async () => {
+  const url = 'https://script.google.com/a/macros/astosec.com/s/AKfycbTEST_id-1/exec';
+  assert.equal(isConfigured({ ...ENV, APPS_SCRIPT_URL: url }), true);
+});
+await test('regression: pasted whitespace/newlines, "True"/"TRUE" and a JSON boolean all count as enabled', async () => {
+  for (const v of ['true', ' true ', 'true\n', 'True', 'TRUE', true]) assert.equal(isConfigured({ ...ENV, FORM_ENABLED: v }), true, JSON.stringify(v));
+  for (const v of ['false', 'yes', '1', '', false]) assert.equal(isConfigured({ ...ENV, FORM_ENABLED: v }), false, JSON.stringify(v));
+  assert.equal(isConfigured({ ...ENV, APPS_SCRIPT_URL: ` ${APPS_URL}\n`, TURNSTILE_SECRET_KEY: ' turnstile-secret ', APPS_SCRIPT_SHARED_SECRET: ` ${SECRET}\n` }), true);
+});
+await test('regression: a "?usp=sharing" suffix on the URL is ignored and never sent', async () => {
+  const env = { ...ENV, APPS_SCRIPT_URL: `${APPS_URL}?usp=sharing` };
+  assert.equal(isConfigured(env), true);
+  assert.equal((await post(VALID, { env })).status, 200);
+  assert.ok(calls.some(c => c.url === APPS_URL), 'fetches the clean /exec URL');
+});
+await test('regression: trimmed values are what is actually used (Turnstile secret, URL, shared secret)', async () => {
+  const env = { ...ENV, TURNSTILE_SECRET_KEY: ' turnstile-secret\n', APPS_SCRIPT_URL: ` ${APPS_URL} `, APPS_SCRIPT_SHARED_SECRET: `${SECRET}\n` };
+  assert.equal((await post(VALID, { env })).status, 200);
+  assert.equal(calls.find(c => c.url.includes('siteverify')).init.body.get('secret'), 'turnstile-secret');
+  assert.equal(JSON.parse(calls.find(c => c.url === APPS_URL).init.body).secret, SECRET);
+});
+await test('still rejects genuinely wrong settings', async () => {
+  assert.equal(isConfigured({ ...ENV, APPS_SCRIPT_URL: 'https://script.google.com/a/macros/astosec.com/s/x/edit' }), false);
+  assert.equal(isConfigured({ ...ENV, APPS_SCRIPT_URL: 'https://example.com/macros/s/x/exec' }), false);
+  assert.equal(isConfigured({ ...ENV, APPS_SCRIPT_SHARED_SECRET: 'short' }), false);
+  assert.deepEqual(configIssues({ ...ENV, APPS_SCRIPT_SHARED_SECRET: 'short' }), ['APPS_SCRIPT_SHARED_SECRET is shorter than 32 characters']);
+});
+await test('temporary diagnostics: status per setting, never any part of a value', async () => {
+  const env = { ...ENV, APPS_SCRIPT_URL: 'https://script.google.com/macros/s/SECRETID/edit', APPS_SCRIPT_SHARED_SECRET: 'tiny-secret-value' };
+  const r = await read(await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), env));
+  assert.equal(r.body.enabled, false);
+  assert.deepEqual(r.body.settings, {
+    FORM_ENABLED: 'ok', TURNSTILE_SITE_KEY: 'ok', TURNSTILE_SECRET_KEY: 'ok',
+    APPS_SCRIPT_URL: 'invalid (not an Apps Script /exec URL)', APPS_SCRIPT_SHARED_SECRET: 'invalid (shorter than 32 characters)',
+  });
+  const text = JSON.stringify(r.body);
+  for (const v of ['SECRETID', 'tiny-secret-value', 'turnstile-secret', 'site-key']) assert.ok(!text.includes(v), `response leaks "${v}"`);
+  assert.deepEqual(settingStatus({}), { FORM_ENABLED: 'missing', TURNSTILE_SITE_KEY: 'missing', TURNSTILE_SECRET_KEY: 'missing', APPS_SCRIPT_URL: 'missing', APPS_SCRIPT_SHARED_SECRET: 'missing' });
+});
+await test('logs name the settings that need attention, never their values', async () => {
+  logs.length = 0;
+  await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), { ...ENV, APPS_SCRIPT_SHARED_SECRET: 'tiny-secret-value' });
+  const text = logs.join('\n');
+  assert.match(text, /APPS_SCRIPT_SHARED_SECRET is shorter than 32 characters/);
+  for (const v of ['tiny-secret-value', 'turnstile-secret', APPS_URL, 'site-key']) assert.ok(!text.includes(v), `log leaks "${v}"`);
+  logs.length = 0;
+  await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), { ASSETS: ENV.ASSETS });
+  assert.equal(logs.length, 0, 'nothing logged when no settings exist (production-off default)');
 });
 
 process.stdout.write(`\n${passed} passed, ${failed} failed\n`);

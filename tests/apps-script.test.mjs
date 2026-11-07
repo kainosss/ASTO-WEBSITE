@@ -83,6 +83,11 @@ test('mail failures report an error (never success) and log no customer details'
   const text = logs.join('\n');
   for (const s of ['Test Person', 'test@example.com', 'Carindale', SECRET]) assert.ok(!text.includes(s));
 });
+test('regression: whitespace around the stored or sent secret is tolerated', () => {
+  const { post, sent } = load({ secret: SECRET + '\n' });
+  assert.deepEqual(post({ secret: ' ' + SECRET, enquiry: ENQUIRY }), { ok: true });
+  assert.equal(sent.length, 1);
+});
 test('GET requests are refused', () => {
   const { ctx } = load();
   assert.equal(JSON.parse(ctx.doGet().text).error, 'method_not_allowed');

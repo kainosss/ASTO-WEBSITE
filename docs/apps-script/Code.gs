@@ -26,8 +26,8 @@ function doPost(e) {
     var body;
     try { body = JSON.parse(e.postData.contents); } catch (err) { return reply_(false, 'bad_request'); }
 
-    var expected = PropertiesService.getScriptProperties().getProperty('SHARED_SECRET') || '';
-    if (expected.length < 32 || !safeEqual_(String(body && body.secret || ''), expected)) return reply_(false, 'unauthorised');
+    var expected = String(PropertiesService.getScriptProperties().getProperty('SHARED_SECRET') || '').trim();
+    if (expected.length < 32 || !safeEqual_(String(body && body.secret || '').trim(), expected)) return reply_(false, 'unauthorised');
 
     var enquiry = validate_(body.enquiry);
     if (!enquiry) return reply_(false, 'invalid');
