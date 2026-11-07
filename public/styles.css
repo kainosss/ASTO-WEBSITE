@@ -74,6 +74,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .service-card p{font-size:15px;line-height:1.7;color:var(--muted);margin:0}
 .service-detail{padding-top:18px;border-top:1px solid #e8ede8;font-size:13px;color:#3f5a50;font-weight:600}
 .service-detail span{margin:0 5px;color:#5f746a}
+/* Why hard-wired CCTV */
+.cctv-section{background:#fff}
+.section-eyebrow{margin:0 0 18px;font-size:12px;letter-spacing:.12em;font-weight:800;color:#4a6157}
+.cctv-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.cctv-benefit{background:var(--paper);border:1px solid #e2e9e3;border-radius:10px;padding:26px 24px;display:flex;flex-direction:column;gap:16px}
+.cctv-benefit .service-icon{height:46px;width:46px}
+.cctv-benefit .service-icon svg{height:24px;width:24px}
+.cctv-benefit h3{font-size:19px;letter-spacing:-.04em;line-height:1.3;margin:4px 0 0;font-weight:700}
+.cctv-benefit p{font-size:15px;line-height:1.7;color:var(--muted);margin:0}
+.cctv-footer{display:grid;grid-template-columns:1fr 1fr;gap:16px 60px;margin-top:16px;align-items:center}
+.cctv-notes p{font-size:16px;line-height:1.75;color:var(--ink);margin:0 0 14px;max-width:500px}
+.cctv-notes .cctv-fine{font-size:14px;line-height:1.7;color:var(--muted);margin:0}
+.cctv-cta{background:#eff3ec;border-radius:11px;padding:32px 34px 34px}
+.cctv-cta h3{font-size:22px;letter-spacing:-.048em;line-height:1.28;margin:0 0 10px;font-weight:700}
+.cctv-cta p{font-size:15px;line-height:1.7;color:var(--muted);margin:0 0 24px;max-width:440px}
+.cctv-cta .button-dark{background:var(--dark);color:#f9fcfa}
+.cctv-cta .button-dark:hover{background:#27554c}
+@media(max-width:1100px){.cctv-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.cctv-footer{gap:16px 40px}}
+@media(max-width:760px){.cctv-grid{gap:12px}.cctv-footer{grid-template-columns:1fr;gap:24px;margin-top:28px}}
+@media(max-width:560px){.cctv-grid{grid-template-columns:1fr}}
+@media(max-width:460px){.cctv-benefit{padding:24px 22px}.cctv-cta{padding:26px 22px}.cctv-cta h3{font-size:20px}}
 /* Approach */
 .approach-section{padding:113px 0 116px;background:#15342e;color:#fff;position:relative;overflow:hidden}
 .approach-grid{display:grid;grid-template-columns:1fr .88fr;gap:115px;position:relative}
