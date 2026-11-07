@@ -26,7 +26,8 @@ Everything in `public/` is the website and is the only folder Cloudflare serves.
 - `docs/apps-script/`: the Google Apps Script mailer (`Code.gs`, `appsscript.json`), pasted into script.google.com by the owner
 - `public/script.js`: mobile navigation, scroll effects, year, enquiry form (validation, Turnstile, honeypot, sending/success/error states)
 - `public/privacy.html`: privacy notice for enquiry collection; `public/404.html`: not-found page
-- `public/robots.txt`: allows crawling (so the noindex header is seen); sitemap line added at launch
+- `public/robots.txt`, `public/sitemap.xml`: crawler rules and sitemap for https://astosec.com/ (indexing still blocked by the `noindex` header in `_headers`)
+- `public/_headers`: pre-launch `noindex` plus security headers (CSP in report-only mode until the live check)
 - `public/assets/og-image.jpg`: 1200×630 sharing preview; `public/assets/branding/apple-touch-icon.png`: home-screen icon
 - `public/_headers`: pre-launch `noindex` header for all pages (remove only at approved launch)
 - `public/assets/asto-home-hero-v3.webp`: AI-generated illustrative hero background (photograph-style, no baked-in text); not genuine on-site photography, a customer site or an ASTO installation
@@ -36,7 +37,6 @@ Everything in `public/` is the website and is the only folder Cloudflare serves.
 - `docs/launch-checklist.md`: every manual setup step before launch (enquiry form, business details, domain, indexing)
 - `docs/enquiry-workflow.md`: how enquiries arrive, email filters, reply templates
 - `docs/business-templates/`: printable quote, invoice, CCTV/alarm handover and maintenance report templates (not served)
-- `docs/launch/sitemap.template.xml`: sitemap to publish at launch with the real domain
 - `tests/site.test.mjs`: browser tests (`node tests/site.test.mjs`; needs Node 18+ and Playwright with Chromium)
 - `tests/worker.test.mjs`, `tests/apps-script.test.mjs`: unit tests for the Worker and the Apps Script mailer (`node tests/<file>`; Node 20+)
 - All tests intercept the enquiry API, Turnstile and Google, so they never send real enquiries

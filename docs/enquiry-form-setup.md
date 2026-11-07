@@ -151,16 +151,17 @@ Settings saved in the dashboard stay in place when future GitHub changes are dep
    messages.
 9. If anything fails, tell Claude the **error message shown on the page** (never the secrets).
 
-**If the form stays off after adding all five settings:** open `/api/enquiry/config`. While the
-form is off, it lists each setting's status (`ok`, `missing` or `invalid …`) without showing any
-values, so you can see which one to fix. Cloudflare's **Workers Logs** for asto-website show the same
-names. The Worker accepts both Apps Script URL formats (`…/macros/s/…/exec` and
+**If the form stays off after adding all five settings:** open Cloudflare → **asto-website** →
+**Observability / Workers Logs**, and reload the website once. A log line
+`enquiry_form_disabled: …` names the settings that need attention (names only, never values). The
+public `/api/enquiry/config` response only says `{"enabled":false,…}` and never names settings.
+The Worker accepts both Apps Script URL formats (`…/macros/s/…/exec` and
 `…/a/macros/astosec.com/s/…/exec`), ignores spaces or line breaks pasted around values, and
 accepts `true` in any capitalisation.
 
-While the form is on, anyone with the workers.dev address can send an enquiry. The site isn't
-indexed by search engines and isn't on astosec.com yet. If you're not ready for real customers
-after testing, switch the form off (below) until you are.
+While the form is on, anyone with the website's address can send an enquiry. Search engines won't
+list the site while `noindex` is on. If you're not ready for real customers, switch the form off
+(below) until you are.
 
 ## Part 7: Switching off, rolling back and launching
 
@@ -172,11 +173,8 @@ the "not connected" state straight away and accepts nothing. The other four sett
 revert pull request. Production redeploys the previous version. Alternatively, **asto-website →
 Deployments** lets you roll back to an earlier version.
 
-**At the public launch** (with separate approval):
-1. Connect `astosec.com` to the Worker, and add `astosec.com` (and `www.astosec.com` if used) to the
-   Turnstile widget's hostnames.
-2. Make sure `FORM_ENABLED` is `true`, then send one real test enquiry on the live domain.
-3. Follow `docs/launch-checklist.md` section C (sitemap, sharing image, removing `noindex`).
+**At the public launch:** follow `docs/launch-checklist.md`. It covers the domain, Turnstile
+hostnames, a live enquiry test, the sitemap and, only with your approval, removing `noindex`.
 
 **If a secret may have leaked:**
 - Shared secret: generate a new one, then update it in both Apps Script (Script Properties) and

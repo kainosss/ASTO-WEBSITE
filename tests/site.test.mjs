@@ -211,6 +211,23 @@ try {
     check(/Brisbane/.test(head.title) && /Brisbane/.test(head.desc), 'seo: title and description mention Brisbane');
     check(head.og, 'seo: Open Graph tags present');
     check(head.ld === 'LocalBusiness', 'seo: structured data parses');
+    const urls = await page.evaluate(() => ({
+      canonical: document.querySelector('link[rel="canonical"]')?.href || '',
+      ogUrl: document.querySelector('meta[property="og:url"]')?.content || '',
+      ogImage: document.querySelector('meta[property="og:image"]')?.content || '',
+    }));
+    check(urls.canonical === 'https://astosec.com/' && urls.ogUrl === 'https://astosec.com/', 'seo: canonical and og:url point to https://astosec.com/');
+    check(urls.ogImage === 'https://astosec.com/assets/og-image.jpg', 'seo: og:image is an absolute https URL on astosec.com');
+    const sitemap = await (await page.request.get(`${BASE}/sitemap.xml`)).text();
+    check(/<urlset[^>]+sitemaps\.org/.test(sitemap) && sitemap.includes('<loc>https://astosec.com/</loc>') && sitemap.includes('<loc>https://astosec.com/privacy</loc>') && !/YOUR-DOMAIN/.test(sitemap), 'seo: sitemap.xml lists the home and privacy pages on astosec.com');
+    const robots = await (await page.request.get(`${BASE}/robots.txt`)).text();
+    check(/^Sitemap: https:\/\/astosec\.com\/sitemap\.xml$/m.test(robots) && /^Allow: \/$/m.test(robots), 'seo: robots.txt allows crawling and names the sitemap');
+    const { readFileSync } = await import('node:fs');
+    const headers = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8').split('\n').filter(l => !l.startsWith('#'));
+    const has = h => headers.some(l => l.trim().startsWith(h));
+    check(has('X-Robots-Tag: noindex, nofollow'), 'launch guard: noindex header still present (remove only with owner approval)');
+    check(['X-Content-Type-Options: nosniff', 'Referrer-Policy:', 'X-Frame-Options: DENY', 'Permissions-Policy:', 'Content-Security-Policy-Report-Only:'].every(has), 'security headers present in _headers (CSP report-only)');
+    check(headers.every(l => !l.trim() || l.startsWith('/') || /^\s+[A-Za-z-]+: \S/.test(l)), '_headers has only rule lines and header lines (no comments inside the rule)');
     for (const path of ['/privacy.html', '/robots.txt', '/assets/og-image.jpg', '/assets/branding/apple-touch-icon.png', '/assets/branding/asto-favicon-tab.svg']) {
       const r = await page.request.get(`${BASE}${path}`);
       check(r.status() === 200, `asset: ${path} is served`);

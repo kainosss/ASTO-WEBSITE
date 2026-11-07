@@ -1,7 +1,7 @@
 // ASTO Security: unit tests for the enquiry Worker (worker/index.js).
 // Run: node tests/worker.test.mjs   (Node 20+). Turnstile and Apps Script are mocked; nothing real is called.
 import assert from 'node:assert/strict';
-import worker, { validateEnquiry, isConfigured, configIssues, settingStatus } from '../worker/index.js';
+import worker, { validateEnquiry, isConfigured, configIssues } from '../worker/index.js';
 
 const ORIGIN = 'https://claude-dazzling-meitner-k2g3cu-asto-website.kainerpersonal.workers.dev';
 const APPS_URL = 'https://script.google.com/macros/s/TESTDEPLOYMENTID_abc-123/exec';
@@ -168,17 +168,56 @@ await test('still rejects genuinely wrong settings', async () => {
   assert.equal(isConfigured({ ...ENV, APPS_SCRIPT_SHARED_SECRET: 'short' }), false);
   assert.deepEqual(configIssues({ ...ENV, APPS_SCRIPT_SHARED_SECRET: 'short' }), ['APPS_SCRIPT_SHARED_SECRET is shorter than 32 characters']);
 });
-await test('temporary diagnostics: status per setting, never any part of a value', async () => {
-  const env = { ...ENV, APPS_SCRIPT_URL: 'https://script.google.com/macros/s/SECRETID/edit', APPS_SCRIPT_SHARED_SECRET: 'tiny-secret-value' };
-  const r = await read(await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), env));
-  assert.equal(r.body.enabled, false);
-  assert.deepEqual(r.body.settings, {
-    FORM_ENABLED: 'ok', TURNSTILE_SITE_KEY: 'ok', TURNSTILE_SECRET_KEY: 'ok',
-    APPS_SCRIPT_URL: 'invalid (not an Apps Script /exec URL)', APPS_SCRIPT_SHARED_SECRET: 'invalid (shorter than 32 characters)',
-  });
-  const text = JSON.stringify(r.body);
-  for (const v of ['SECRETID', 'tiny-secret-value', 'turnstile-secret', 'site-key']) assert.ok(!text.includes(v), `response leaks "${v}"`);
-  assert.deepEqual(settingStatus({}), { FORM_ENABLED: 'missing', TURNSTILE_SITE_KEY: 'missing', TURNSTILE_SECRET_KEY: 'missing', APPS_SCRIPT_URL: 'missing', APPS_SCRIPT_SHARED_SECRET: 'missing' });
+await test('diagnostics removed: public config is only {enabled, turnstileSiteKey} in every state', async () => {
+  const states = {
+    'production off (no settings)': { ASSETS: ENV.ASSETS },
+    'FORM_ENABLED=false': { ...ENV, FORM_ENABLED: 'false' },
+    'invalid URL and short secret': { ...ENV, APPS_SCRIPT_URL: 'https://script.google.com/macros/s/SECRETID/edit', APPS_SCRIPT_SHARED_SECRET: 'tiny-secret-value' },
+    'one secret missing': { ...ENV, TURNSTILE_SECRET_KEY: '' },
+  };
+  for (const [label, env] of Object.entries(states)) {
+    const res = await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), env);
+    const body = await res.json();
+    assert.deepEqual(body, { enabled: false, turnstileSiteKey: '' }, label);
+    const text = JSON.stringify(body);
+    for (const leak of ['settings', 'FORM_ENABLED', 'TURNSTILE', 'APPS_SCRIPT', 'SECRETID', 'tiny-secret-value', 'turnstile-secret', 'site-key', 'missing', 'invalid'])
+      assert.ok(!text.includes(leak), `${label}: response mentions "${leak}"`);
+  }
+  const live = await read(await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), ENV));
+  assert.deepEqual(live.body, { enabled: true, turnstileSiteKey: 'site-key' }, 'enabled: only the public site key');
+  const mod = await import('../worker/index.js');
+  assert.ok(!('settingStatus' in mod) && !('SETUP_DIAGNOSTICS' in mod), 'diagnostics code removed');
+});
+await test('security: Turnstile token without the "enquiry" action is rejected', async () => {
+  turnstileReply = { success: true, hostname: new URL(ORIGIN).hostname };
+  assert.equal((await post(VALID)).status, 403);
+  turnstileReply = { success: true, hostname: new URL(ORIGIN).hostname, action: '' };
+  assert.equal((await post(VALID)).status, 403);
+  assert.ok(!calls.some(c => c.url === APPS_URL), 'nothing sent');
+});
+await test('security: oversized body without Content-Length (chunked) is rejected before parsing', async () => {
+  const big = new TextEncoder().encode(JSON.stringify({ ...VALID, message: 'a'.repeat(30000) }));
+  const stream = new ReadableStream({ start(c) { for (let i = 0; i < big.length; i += 4096) c.enqueue(big.slice(i, i + 4096)); c.close(); } });
+  const req = new Request(`${ORIGIN}/api/enquiry`, { method: 'POST', headers: { 'content-type': 'application/json', origin: ORIGIN }, body: stream, duplex: 'half' });
+  assert.equal(req.headers.get('content-length'), null);
+  const r = await read(await worker.fetch(req, ENV));
+  assert.equal(r.status, 413); assert.equal(calls.length, 0);
+});
+await test('security: Apps Script error codes are sanitised before logging', async () => {
+  logs.length = 0;
+  appsReply = () => new Response(JSON.stringify({ ok: false, error: 'bad\nInjected: test.person@example.com <script>' }));
+  assert.equal((await post(VALID)).status, 502);
+  const text = logs.join('\n');
+  assert.ok(/^enquiry_send_failed apps_script_[a-z0-9_]+$/i.test(text.trim()), text);
+  assert.ok(!text.includes('@') && !text.includes('<') && !text.includes('\n'));
+});
+await test('security: no CORS headers; preflight and other methods are refused', async () => {
+  const pre = await worker.fetch(new Request(`${ORIGIN}/api/enquiry`, { method: 'OPTIONS', headers: { origin: 'https://evil.example', 'access-control-request-method': 'POST' } }), ENV);
+  assert.equal(pre.status, 405);
+  assert.equal(pre.headers.get('access-control-allow-origin'), null);
+  const ok = await post(VALID);
+  assert.equal(ok.headers.get('access-control-allow-origin'), null);
+  assert.equal(ok.headers.get('cache-control'), 'no-store');
 });
 await test('logs name the settings that need attention, never their values', async () => {
   logs.length = 0;
