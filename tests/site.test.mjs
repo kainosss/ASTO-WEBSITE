@@ -101,6 +101,52 @@ try {
     await page.close();
   }
 
+  // ---------- "Why hard-wired CCTV?" section ----------
+  for (const [label, width, height] of [['desktop', 1440, 900], ['mobile', 390, 844]]) {
+    const { page, problems, sent } = await openPage({ width, height });
+    const s = await page.evaluate(() => {
+      const sec = document.getElementById('why-hard-wired');
+      if (!sec) return null;
+      const order = [...document.querySelectorAll('main > section')].map(x => x.id);
+      const cta = sec.querySelector('a.button[href="#contact"]');
+      return {
+        afterServices: order.indexOf('why-hard-wired') === order.indexOf('services') + 1 && order.indexOf('why-hard-wired') < order.indexOf('contact'),
+        labelledBy: sec.getAttribute('aria-labelledby') === 'cctv-heading' && sec.querySelector('h2#cctv-heading') !== null,
+        eyebrow: sec.querySelector('.section-eyebrow')?.textContent.trim(),
+        h2: sec.querySelector('h2').innerText.replace(/\s+/g, ' ').trim(),
+        benefits: [...sec.querySelectorAll('.cctv-grid > li h3')].map(h => h.textContent.trim()),
+        headings: [...sec.querySelectorAll('h2, h3')].map(h => h.tagName),
+        iconsHidden: [...sec.querySelectorAll('svg')].every(svg => svg.closest('[aria-hidden="true"]')),
+        cta: cta && cta.textContent.trim(),
+        ctaVisible: cta && cta.getBoundingClientRect().width > 0,
+        text: sec.textContent.replace(/\s+/g, ' '),
+        forms: sec.querySelectorAll('form, input, select, textarea').length,
+        overflow: [...sec.querySelectorAll('*')].filter(e => e.getBoundingClientRect().right > innerWidth + 0.5).length,
+      };
+    });
+    check(s !== null, `cctv ${label}: section is present`);
+    if (!s) { await page.close(); continue; }
+    check(s.afterServices, `cctv ${label}: placed directly after Services, before the enquiry form`);
+    check(s.labelledBy && s.eyebrow === 'WHY HARD-WIRED CCTV?' && s.h2 === 'Built for reliable, everyday security.', `cctv ${label}: eyebrow and heading`, `${s.eyebrow} / ${s.h2}`);
+    check(JSON.stringify(s.benefits) === JSON.stringify(['Reliable connection', 'Continuous recording', 'Local video storage', 'No battery charging']), `cctv ${label}: four benefits`, s.benefits.join(','));
+    check(s.headings[0] === 'H2' && s.headings.slice(1).every(t => t === 'H3'), `cctv ${label}: heading hierarchy is h2 then h3`, s.headings.join(','));
+    check(s.iconsHidden, `cctv ${label}: decorative icons hidden from screen readers`);
+    check(/considered camera positioning, neat cabling/.test(s.text) && /We can recommend and install a CCTV system suited to your property, coverage needs and budget\./.test(s.text), `cctv ${label}: installation statement and CTA copy present`);
+    check(/internet connection/.test(s.text) && /\(UPS\)/.test(s.text) && /wireless cameras offer local storage too/.test(s.text), `cctv ${label}: accuracy notes (remote viewing, UPS, DIY local storage) present`);
+    check(!/\$\d|price|pricing|review|testimonial|guarantee|24\/7|prevent crime/i.test(s.text), `cctv ${label}: no pricing, reviews, guarantees or crime-prevention claims`);
+    check(s.forms === 0 && s.overflow === 0, `cctv ${label}: no extra form and no horizontal overflow`, `${s.forms} fields, ${s.overflow} overflowing`);
+    check(s.cta === 'Get a Free CCTV Quote' && s.ctaVisible, `cctv ${label}: "Get a Free CCTV Quote" button links to #contact`, s.cta);
+    // Keyboard: focus the CTA and press Enter; it should take the visitor to the existing enquiry form.
+    await page.focus('#why-hard-wired a.button');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => location.hash === '#contact');
+    for (let last = -1, y = 0, i = 0; i < 40 && (y = await page.evaluate(() => scrollY)) !== last; i++) { last = y; await page.waitForTimeout(150); }
+    const top = await page.evaluate(() => document.getElementById('contact').getBoundingClientRect().top);
+    check(Math.abs(top - (width <= 760 ? 72 : 80)) <= 2 && sent.length === 0, `cctv ${label}: keyboard activation of the CTA scrolls to the enquiry section without sending anything`, `contact top ${top}px`);
+    check(problems.length === 0, `cctv ${label}: no console errors`, problems.join(' | '));
+    await page.close();
+  }
+
   // ---------- Preview mode (Worker reports the form disabled — the production default) ----------
   {
     const { page, sent } = await openPage({ width: 390, height: 844 });
