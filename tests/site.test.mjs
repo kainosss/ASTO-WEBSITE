@@ -135,6 +135,13 @@ try {
     check(/internet connection/.test(s.text) && /\(UPS\)/.test(s.text) && /wireless cameras offer local storage too/.test(s.text), `cctv ${label}: accuracy notes (remote viewing, UPS, DIY local storage) present`);
     check(!/\$\d|price|pricing|review|testimonial|guarantee|24\/7|prevent crime/i.test(s.text), `cctv ${label}: no pricing, reviews, guarantees or crime-prevention claims`);
     check(s.forms === 0 && s.overflow === 0, `cctv ${label}: no extra form and no horizontal overflow`, `${s.forms} fields, ${s.overflow} overflowing`);
+    // Layout flow: intro → cards → notes → CTA panel, with the CTA last and full width (not beside the notes).
+    const flow = await page.evaluate(() => {
+      const r = sel => document.querySelector(`#why-hard-wired ${sel}`).getBoundingClientRect();
+      const grid = r('.cctv-grid'), notes = r('.cctv-notes'), cta = r('.cctv-cta'), btn = r('.cctv-cta a.button');
+      return { order: grid.bottom <= notes.top && notes.bottom <= cta.top, fullWidth: Math.abs(cta.width - grid.width) < 1, btnInside: btn.left >= cta.left && btn.right <= cta.right && btn.top >= cta.top && btn.bottom <= cta.bottom };
+    });
+    check(flow.order && flow.fullWidth && flow.btnInside, `cctv ${label}: notes sit below the cards and the CTA panel spans the full width below them`, JSON.stringify(flow));
     check(s.cta === 'Get a Free CCTV Quote' && s.ctaVisible, `cctv ${label}: "Get a Free CCTV Quote" button links to #contact`, s.cta);
     // Keyboard: focus the CTA and press Enter; it should take the visitor to the existing enquiry form.
     await page.focus('#why-hard-wired a.button');
@@ -274,7 +281,12 @@ try {
     check(has('X-Robots-Tag: noindex, nofollow'), 'launch guard: noindex header still present (remove only with owner approval)');
     check(['X-Content-Type-Options: nosniff', 'Referrer-Policy:', 'X-Frame-Options: DENY', 'Permissions-Policy:', 'Content-Security-Policy-Report-Only:'].every(has), 'security headers present in _headers (CSP report-only)');
     check(headers.every(l => !l.trim() || l.startsWith('/') || /^\s+[A-Za-z-]+: \S/.test(l)), '_headers has only rule lines and header lines (no comments inside the rule)');
-    for (const path of ['/privacy.html', '/robots.txt', '/assets/og-image.jpg', '/assets/branding/apple-touch-icon.png', '/assets/branding/asto-favicon-tab.svg']) {
+    {
+      const css = readFileSync(new URL('../public/styles.css', import.meta.url), 'utf8');
+      const preload = await page.evaluate(() => document.querySelector('link[rel="preload"][as="image"]')?.getAttribute('href'));
+      check(preload === 'assets/asto-home-hero-v4.webp' && css.includes("url('assets/asto-home-hero-v4.webp')") && !/hero-v3/.test(css), 'hero: preload and CSS both use the retouched hero image');
+    }
+    for (const path of ['/assets/asto-home-hero-v4.webp', '/privacy.html', '/robots.txt', '/assets/og-image.jpg', '/assets/branding/apple-touch-icon.png', '/assets/branding/asto-favicon-tab.svg']) {
       const r = await page.request.get(`${BASE}${path}`);
       check(r.status() === 200, `asset: ${path} is served`);
     }
