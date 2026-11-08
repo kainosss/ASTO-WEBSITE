@@ -26,10 +26,9 @@ Everything in `public/` is the website and is the only folder Cloudflare serves.
 - `docs/apps-script/`: the Google Apps Script mailer (`Code.gs`, `appsscript.json`), pasted into script.google.com by the owner
 - `public/script.js`: mobile navigation, scroll effects, year, enquiry form (validation, Turnstile, honeypot, sending/success/error states)
 - `public/privacy.html`: privacy notice for enquiry collection; `public/404.html`: not-found page
-- `public/robots.txt`, `public/sitemap.xml`: crawler rules and sitemap for https://astosec.com/ (indexing still blocked by the `noindex` header in `_headers`)
-- `public/_headers`: pre-launch `noindex` plus security headers (CSP in report-only mode until the live check)
+- `public/robots.txt`, `public/sitemap.xml`: crawler rules and sitemap for https://astosec.com/ (open to indexing; workers.dev, preview URLs and `/api` send `noindex`)
+- `public/_headers`: security headers (CSP in report-only mode until the live check) and `noindex` for the workers.dev and preview hostnames
 - `public/assets/og-image.jpg`: 1200×630 sharing preview; `public/assets/branding/apple-touch-icon.png`: home-screen icon
-- `public/_headers`: pre-launch `noindex` header for all pages (remove only at approved launch)
 - `public/assets/asto-home-hero-v4.webp`: AI-generated illustrative hero background (photograph-style, no baked-in text); not genuine on-site photography, a customer site or an ASTO installation
 - `public/assets/branding/`: proposed Concept 1 vector logos (geometric A, forest green and sage); `asto-favicon-tab.svg` (geometric A on a forest-green rounded square, tuned for 16–32px tabs) is the site favicon; the header and footer use the inlined `asto-horizontal-dark.svg` and `asto-horizontal-light.svg`
 - `wrangler.jsonc`: Cloudflare Workers config (Worker `asto-website`: script `worker/index.js` for `/api/*`, static files from `./public`, 404 page for unknown URLs); required for pull-request preview builds. Secrets live in Cloudflare, never here

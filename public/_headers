@@ -1,14 +1,13 @@
 # Cloudflare Workers static-assets headers. This file is not served publicly.
 # API responses from worker/index.js set their own headers.
 #
-# X-Robots-Tag (pre-launch): asks search engines not to index any page or preview URL.
-#   Remove ONLY the X-Robots-Tag line when the owner approves public indexing.
-# The other headers are security headers with no effect on the design or the enquiry form.
+# Indexing: pages on https://astosec.com have no X-Robots-Tag, so search engines may list them.
+#   The workers.dev and preview hostnames (rule below) and all API responses send noindex.
+# The headers below are security headers with no effect on the design or the enquiry form.
 # Content-Security-Policy-Report-Only: browsers warn in the console but block nothing. Rename it to
 #   Content-Security-Policy once a live enquiry test on astosec.com shows no CSP warnings in the
 #   browser console (docs/launch-checklist.md).
 /*
-  X-Robots-Tag: noindex, nofollow
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: DENY
