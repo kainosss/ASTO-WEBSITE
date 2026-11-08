@@ -14,3 +14,8 @@
   X-Frame-Options: DENY
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+
+# Alternative hostnames (the workers.dev address and pull-request preview URLs) are never indexed, so
+# search results only ever show https://astosec.com. Keep this rule after the launch.
+https://:name.kainerpersonal.workers.dev/*
+  X-Robots-Tag: noindex

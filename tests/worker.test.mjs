@@ -219,6 +219,11 @@ await test('security: no CORS headers; preflight and other methods are refused',
   assert.equal(ok.headers.get('access-control-allow-origin'), null);
   assert.equal(ok.headers.get('cache-control'), 'no-store');
 });
+await test('seo: every API response tells search engines not to index it', async () => {
+  for (const res of [await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), ENV), await post(VALID), await worker.fetch(new Request(`${ORIGIN}/api/unknown`), ENV)]) {
+    assert.equal(res.headers.get('x-robots-tag'), 'noindex');
+  }
+});
 await test('logs name the settings that need attention, never their values', async () => {
   logs.length = 0;
   await worker.fetch(new Request(`${ORIGIN}/api/enquiry/config`), { ...ENV, APPS_SCRIPT_SHARED_SECRET: 'tiny-secret-value' });

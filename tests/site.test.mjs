@@ -276,6 +276,11 @@ try {
     check(/Brisbane/.test(head.title) && /Brisbane/.test(head.desc), 'seo: title and description mention Brisbane');
     check(head.og, 'seo: Open Graph tags present');
     check(head.ld === 'LocalBusiness', 'seo: structured data parses');
+    const ld = await page.evaluate(() => JSON.parse(document.querySelector('script[type="application/ld+json"]').textContent));
+    check(ld.url === 'https://astosec.com/' && ld.email === 'admin@astosec.com' && !('telephone' in ld) && !('address' in ld) && !('aggregateRating' in ld), 'seo: structured data has the site URL and confirmed email only (no invented phone, address or ratings)');
+    check(head.title.length <= 60 && head.desc.length >= 70 && head.desc.length <= 160 && /CCTV installation/i.test(head.title + head.desc), 'seo: title and description lengths suit search results and mention CCTV installation', `${head.title.length}/${head.desc.length}`);
+    const shownEmail = await page.evaluate(() => { const p = document.getElementById('contactEmailDisplay'); const a = p && p.querySelector('a'); return !p.hidden && a ? a.getAttribute('href') : ''; });
+    check(shownEmail === 'mailto:admin@astosec.com', 'contact: business email is shown beside the form', shownEmail);
     const urls = await page.evaluate(() => ({
       canonical: document.querySelector('link[rel="canonical"]')?.href || '',
       ogUrl: document.querySelector('meta[property="og:url"]')?.content || '',
@@ -292,7 +297,12 @@ try {
     const has = h => headers.some(l => l.trim().startsWith(h));
     check(has('X-Robots-Tag: noindex, nofollow'), 'launch guard: noindex header still present (remove only with owner approval)');
     check(['X-Content-Type-Options: nosniff', 'Referrer-Policy:', 'X-Frame-Options: DENY', 'Permissions-Policy:', 'Content-Security-Policy-Report-Only:'].every(has), 'security headers present in _headers (CSP report-only)');
-    check(headers.every(l => !l.trim() || l.startsWith('/') || /^\s+[A-Za-z-]+: \S/.test(l)), '_headers has only rule lines and header lines (no comments inside the rule)');
+    check(headers.every(l => !l.trim() || l.startsWith('/') || l.startsWith('https://') || /^\s+[A-Za-z-]+: \S/.test(l)), '_headers has only rule lines and header lines (no comments inside the rule)');
+    {
+      // Alternative hostnames (workers.dev and preview URLs) stay out of search results, before and after launch.
+      const text = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8');
+      check(/^https:\/\/:name\.kainerpersonal\.workers\.dev\/\*\n  X-Robots-Tag: noindex$/m.test(text), 'seo: workers.dev and preview hostnames always send noindex');
+    }
     {
       const css = readFileSync(new URL('../public/styles.css', import.meta.url), 'utf8');
       const preload = await page.evaluate(() => document.querySelector('link[rel="preload"][as="image"]')?.getAttribute('href'));
