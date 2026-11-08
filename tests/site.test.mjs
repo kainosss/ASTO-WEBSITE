@@ -119,6 +119,8 @@ try {
         caption: sec.querySelector('.compare-table caption')?.textContent.trim() || '',
         mobileLabels: [...sec.querySelectorAll('.compare-table td')].map(td => getComputedStyle(td, '::before').content),
         cards: sec.querySelectorAll('.cctv-grid, .cctv-benefit, .service-card').length,
+        checks: sec.querySelectorAll('td.compare-wired .compare-check').length,
+        tiles: sec.querySelectorAll('tbody th .compare-tile').length,
         headings: [...sec.querySelectorAll('h2, h3')].map(h => h.tagName),
         iconsHidden: [...sec.querySelectorAll('svg')].every(svg => svg.closest('[aria-hidden="true"]')),
         cta: cta && cta.textContent.trim(),
@@ -138,16 +140,17 @@ try {
     check(/^Usually/.test(s.rows[0][1]) && /^Often/.test(s.rows[1][1]) && /depending on the model/.test(s.rows[3][1]), `cctv ${label}: DIY column is hedged (usually/often/depending on the model), not absolute`);
     check(s.cards === 0, `cctv ${label}: no separate benefit cards`);
     if (width <= 760) check(s.mobileLabels.every(c => /Battery DIY|Hard-wired PoE/.test(c)), `cctv ${label}: stacked layout labels both options on every row`, s.mobileLabels.join(','));
-    check(s.headings.length === 1 && s.headings[0] === 'H2', `cctv ${label}: section has a single h2 (comparison uses table headers)`, s.headings.join(','));
+    check(s.headings.join(',') === 'H2,H3', `cctv ${label}: heading hierarchy is h2, then one h3 for the CTA (comparison uses table headers)`, s.headings.join(','));
     check(s.iconsHidden, `cctv ${label}: decorative icons hidden from screen readers`);
-    check(/considered camera positioning, neat cabling/.test(s.text), `cctv ${label}: installation sentence present`);
+    check(/considered camera positioning, neat cabling/i.test(s.text) && /Professional installation for a system you can rely on\./.test(s.text), `cctv ${label}: installation heading and sentence present`);
+    check(s.checks === 4 && s.tiles === 4, `cctv ${label}: four check marks in the hard-wired column and four feature icons`, `${s.checks}/${s.tiles}`);
     check(/vary by model/.test(s.text) && /internet connection/.test(s.text) && /UPS/.test(s.text) && /wireless cameras also offer local storage or continuous recording/.test(s.text), `cctv ${label}: accuracy note (models vary, remote viewing, UPS) present`);
     check(!/\$\d|price|pricing|review|testimonial|guarantee|24\/7 monitor|monitoring|emergency response|prevent crime/i.test(s.text), `cctv ${label}: no pricing, reviews, guarantees, monitoring or crime-prevention claims`);
     check(s.forms === 0 && s.overflow === 0, `cctv ${label}: no extra form and no horizontal overflow`, `${s.forms} fields, ${s.overflow} overflowing`);
     // Layout flow: intro → comparison → note → CTA row, with the CTA last and full width.
     const flow = await page.evaluate(() => {
       const r = sel => document.querySelector(`#why-hard-wired ${sel}`).getBoundingClientRect();
-      const intro = r('.section-intro'), cmp = r('.compare'), note = r('.compare-note'), cta = r('.cctv-cta'), btn = r('.cctv-cta a.button');
+      const intro = r('.cctv-intro'), cmp = r('.compare'), note = r('.compare-note'), cta = r('.cctv-cta'), btn = r('.cctv-cta a.button');
       return { order: intro.bottom <= cmp.top && cmp.bottom <= note.top && note.bottom <= cta.top, fullWidth: Math.abs(cta.width - cmp.width) < 1, btnInside: btn.left >= cta.left && btn.right <= cta.right && btn.top >= cta.top && btn.bottom <= cta.bottom };
     });
     check(flow.order && flow.fullWidth && flow.btnInside, `cctv ${label}: comparison, note and CTA follow in order, CTA last and full width`, JSON.stringify(flow));
