@@ -8,5 +8,5 @@
  *               Leave empty to show no address.
  */
 window.ASTO_CONFIG = {
-  contactEmail: '',
+  contactEmail: 'admin@astosec.com',
 };

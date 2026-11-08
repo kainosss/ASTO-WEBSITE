@@ -32,9 +32,10 @@ const APPS_SCRIPT_URL = /^https:\/\/script\.google\.com\/(?:a\/macros\/[A-Za-z0-
 const EMAIL = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[A-Za-z]{2,}$/;
 const PHONE = /^[0-9+()\s-]{8,20}$/;
 
+// API responses are never cached or listed by search engines.
 const json = (body, status = 200) => new Response(JSON.stringify(body), {
   status,
-  headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' },
+  headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-robots-tag': 'noindex' },
 });
 
 const SETTING_NAMES = ['FORM_ENABLED', 'TURNSTILE_SITE_KEY', 'TURNSTILE_SECRET_KEY', 'APPS_SCRIPT_URL', 'APPS_SCRIPT_SHARED_SECRET'];

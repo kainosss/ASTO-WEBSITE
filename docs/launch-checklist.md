@@ -4,94 +4,105 @@ Work through these in order. Items marked **(owner)** need your accounts, decisi
 details. None of them can be completed from the code. Nothing here changes DNS, Google Workspace
 email records or Cloudflare secrets unless the step says so.
 
-Current state:
-- The enquiry form works in production: Worker, Turnstile and Apps Script, delivering to
-  admin@astosec.com.
-- Search indexing is still **blocked** by `X-Robots-Tag: noindex, nofollow` in `public/_headers`.
+Current state (checked 8 November 2026, after PR #9):
+- `main` includes the security hardening (PR #7), the hero camera retouch and the hard-wired CCTV
+  comparison (PRs #8 and #9).
+- `https://astosec.com` is public (Cloudflare Access removed). ASTO Office stays private at
+  `office.astosec.com`. The enquiry form is enabled.
+- Search indexing is still blocked by `X-Robots-Tag: noindex, nofollow` until the "enable indexing"
+  change is merged. The workers.dev address is also public now; it keeps `noindex` permanently.
+- `www.astosec.com` has no DNS record. `astosec.com.au` is on Cloudflare but doesn't redirect yet
+  (Cloudflare error 522), and `www.astosec.com.au` points to `192.0.2.1` without the proxy.
+- A `google-site-verification` TXT record already exists on `astosec.com`.
 
 ## 1. Business and operational readiness (owner)
 
 - [ ] Business insurance in place (public liability, and professional indemnity if relevant).
-- [ ] Business name, structure and ABN confirmed.
-- [ ] Queensland security licensing confirmed for the work offered. Decide whether a licence number
-      should appear on the website and documents.
+- [ ] Business name, structure and ABN confirmed. Decide whether to show the ABN in the footer.
+- [ ] Queensland security licensing confirmed for the work offered. Check with the Office of Fair
+      Trading whether your licence number must appear on the website and in advertising. Supply it
+      if so.
 - [ ] Employment contract and any outside-work or conflict-of-interest obligations checked.
 - [ ] Business details added to the templates in `docs/business-templates/`.
 - [ ] Enquiry routine ready: email filters and reply templates (`docs/enquiry-workflow.md`).
 
-## 2. Confirm astosec.com works (owner)
+## 2. Public access (done)
 
-- [ ] In Cloudflare → **Workers & Pages → asto-website → Settings → Domains & Routes**, check that
-      `astosec.com` is attached as a custom domain. Add `www.astosec.com` too if you want it.
-      Adding a custom domain creates its own DNS record; **don't change the existing Google
-      Workspace MX, SPF, DKIM or DMARC records.**
-- [ ] Choose **one** main address. The site's canonical tags, sitemap and sharing preview use
-      `https://astosec.com/`. If you add `www`, redirect it to `https://astosec.com/` (Cloudflare →
-      Rules → Redirect Rules).
-- [ ] Open `https://astosec.com/` and check the padlock (HTTPS), the homepage, `/privacy`, and that
-      a made-up address (e.g. `/test`) shows the "Page not found" page.
-- [ ] Optional: in Cloudflare → SSL/TLS, turn on **Always Use HTTPS**. Consider **HSTS** once
-      you're sure HTTPS works on every hostname you use.
+- [x] Cloudflare Access removed from `astosec.com`; ASTO Office remains protected on
+      `office.astosec.com`. Keep it that way when editing Access applications.
+- [x] `https://astosec.com/`, `/privacy`, `/robots.txt` and `/sitemap.xml` load publicly, and
+      `/api/enquiry/config` shows only `{"enabled":true,"turnstileSiteKey":"…"}`.
 
-## 3. Turnstile authorises the public domain (owner)
+## 3. Domains (owner, DNS changes need your approval)
 
-- [ ] Cloudflare → **Turnstile → ASTO website → Hostnames**: add `astosec.com`, plus
-      `www.astosec.com` if it serves the site rather than redirecting. Keep the workers.dev
-      hostname for now.
+- [ ] **`www.astosec.com`** (recommended, so people who type `www` still arrive): add a proxied
+      (orange-cloud) DNS record for `www`, e.g. `AAAA www 100::`, then **Rules → Redirect Rules**:
+      hostname `www.astosec.com` → `https://astosec.com${path}` (301, keep query string). Don't
+      touch the MX, SPF, DKIM or DMARC records.
+- [ ] **`astosec.com.au`** → `astosec.com`: in the `astosec.com.au` zone, make the apex and `www`
+      records **proxied** (orange cloud). `www` currently points to `192.0.2.1` and isn't
+      proxied. Then add a Redirect Rule: all requests → `https://astosec.com${path}` (301, keep
+      query string). Test both `https://astosec.com.au/` and `https://www.astosec.com.au/`.
+- [ ] Optional: SSL/TLS → **Always Use HTTPS** on both zones. Consider HSTS once you're sure HTTPS
+      works on every hostname you use.
+- [ ] Optional email improvement: `astosec.com` has no DMARC record. Ask before adding one (start
+      with `p=none`).
+
+## 4. Turnstile authorises the public domain (owner)
+
+- [ ] Cloudflare → **Turnstile → ASTO website → Hostnames**: `astosec.com` must be listed. Keep the
+      workers.dev hostname. You don't need to add `www` or `.com.au`: they redirect.
 - [ ] Don't change the Turnstile keys or the Worker's secrets.
 
-## 4. Enquiry form works on the public domain (owner)
+## 5. One controlled live enquiry test (owner)
 
-- [ ] On `https://astosec.com/`, send one enquiry per service (CCTV, intruder alarms,
-      preventative maintenance) using a personal email address.
-- [ ] Check each arrives in admin@astosec.com from "ASTO Security website", with the subject
-      `New ASTO enquiry: <service> – <suburb>`, and that **Reply** goes to the customer.
-- [ ] Open the browser's developer console (F12 → Console) during the test. If there are **no
-      Content-Security-Policy warnings**, ask Claude to switch the CSP from report-only to enforced
-      (a one-line change in `public/_headers`).
-- [ ] `https://astosec.com/api/enquiry/config` should show only
-      `{"enabled":true,"turnstileSiteKey":"…"}`. The site key is public by design.
+- [ ] In a private window on `https://astosec.com/`, send **one** enquiry with fictional details:
+      name "Launch Test", your personal email, suburb "Brisbane", service "CCTV installation",
+      message "Website launch test, please ignore."
+- [ ] Check it arrives in admin@astosec.com from "ASTO Security website", with the subject
+      `New ASTO enquiry: CCTV installation – Brisbane`, and that **Reply** goes to your personal
+      address.
+- [ ] Keep the browser console open (F12 → Console). If there are **no Content-Security-Policy
+      warnings**, ask Claude to switch the CSP from report-only to enforced (one line in
+      `public/_headers`).
 
-## 5. Privacy notice and contact details (owner)
+## 6. Allow indexing: only with your explicit approval
 
-- [ ] Read `/privacy`. It describes the enquiry form, Cloudflare (hosting and Turnstile), Google
-      Workspace email and Google Fonts. Update it if you add analytics, a mailing list or another
-      service.
-- [ ] Decide whether to show a contact email or phone number. To show an email, set `contactEmail`
-      in `public/config.js`, e.g. `'admin@astosec.com'`. Use only confirmed details.
+- [ ] Merge the "enable indexing" change. It removes `X-Robots-Tag: noindex, nofollow` for
+      astosec.com only; workers.dev, preview URLs and `/api` stay `noindex`.
+- [ ] After it deploys, check `https://astosec.com/` in the browser's developer tools (Network → the
+      page → Response Headers): `x-robots-tag` should be gone.
 
-## 6. Sitemap (ready)
+## 7. Google Search Console (owner, free)
 
-- [x] `public/sitemap.xml` lists `https://astosec.com/` and `https://astosec.com/privacy`, and
-      `public/robots.txt` points to it.
-- [ ] After the domain works, open `https://astosec.com/sitemap.xml` to confirm it loads.
+- [ ] Go to <https://search.google.com/search-console>. A `google-site-verification` TXT record
+      already exists on `astosec.com`, so a **Domain** property for `astosec.com` may already be
+      verified. If not, add the property and use the TXT value Google shows (ask before changing
+      DNS).
+- [ ] **Sitemaps** → submit `https://astosec.com/sitemap.xml`. It should say "Success".
+- [ ] **URL Inspection** → `https://astosec.com/` → **Test live URL**, then **Request indexing**.
+      Do the same for `https://astosec.com/privacy`.
+- [ ] Over the next 1–4 weeks, check **Pages** (indexing) and **Performance** (searches). It is
+      normal for new sites to take time to appear.
 
-## 7. Remove `noindex`: only with explicit owner approval
+## 8. Google Business Profile (owner, free)
 
-- [ ] When you approve public indexing, ask Claude to remove **only** the `X-Robots-Tag: noindex,
-      nofollow` line from `public/_headers` (via a pull request). Leave the other security headers.
-- [ ] After it deploys, check `https://astosec.com/` in a header checker, or the browser's
-      developer tools (Network → the page → Response Headers), and confirm `x-robots-tag` is gone.
+- [ ] Website field: exactly `https://astosec.com/`.
+- [ ] Business name "ASTO Security", the same email (admin@astosec.com) and the same service area
+      (Brisbane) as the website. Add a phone number only once you have a confirmed business number,
+      and then add it to the website too.
+- [ ] Categories, for example "Security system installer" (primary). Add services: CCTV
+      installation, intruder alarm installation, security system maintenance.
+- [ ] Service-area business with the address hidden if you have no shopfront.
+- [ ] No invented reviews, photos of other people's work or unverified claims. Ask genuine
+      customers for reviews after completed jobs.
 
-## 8. Google Search Console (owner, free)
+## 9. Final checks after launch (owner)
 
-- [ ] Add the property `https://astosec.com/`. Domain verification uses a DNS TXT record; the
-      HTML-tag method avoids a DNS change. Ask before adding DNS records.
-- [ ] Submit `https://astosec.com/sitemap.xml`.
-- [ ] Use **URL Inspection** on the homepage to request indexing.
-
-## 9. Google Business Profile (owner, free)
-
-- [ ] Create the profile with genuine details only: business name, category (e.g. "Security system
-      installer"), service area (Brisbane suburbs you cover) and website `https://astosec.com/`.
-- [ ] If you have no shopfront, set it up as a service-area business with your address hidden.
-- [ ] No invented reviews, photos of other people's work or unverified claims.
-
-## 10. Final customer enquiry test (owner)
-
-- [ ] After indexing is approved and live, send one final enquiry from a phone on mobile data.
-- [ ] Reply to it from admin@astosec.com and confirm the reply reaches the "customer" address.
-- [ ] Delete the test enquiries, and record the launch date.
+- [ ] From a phone on mobile data: open the site, tap **Get a Free CCTV Quote**, and check that it
+      jumps to the form.
+- [ ] Reply to the launch-test enquiry from admin@astosec.com and confirm the reply arrives.
+- [ ] Delete the test enquiry and record the launch date.
 
 ## Keep in mind
 
