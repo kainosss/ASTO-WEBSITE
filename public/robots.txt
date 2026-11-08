@@ -1,7 +1,6 @@
 # ASTO Security
-# Pre-launch: every page also sends "X-Robots-Tag: noindex, nofollow" (see public/_headers), so search
-# engines will not list the site yet. Crawling is allowed so they can see that rule. When the owner
-# approves public indexing, remove the X-Robots-Tag line from _headers; this file needs no change.
+# Public pages may be crawled and indexed. API responses and the workers.dev/preview hostnames send
+# "X-Robots-Tag: noindex" (see public/_headers and worker/index.js), so they stay out of search results.
 User-agent: *
 Allow: /
 Sitemap: https://astosec.com/sitemap.xml

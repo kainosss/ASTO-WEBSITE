@@ -295,7 +295,15 @@ try {
     const { readFileSync } = await import('node:fs');
     const headers = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8').split('\n').filter(l => !l.startsWith('#'));
     const has = h => headers.some(l => l.trim().startsWith(h));
-    check(has('X-Robots-Tag: noindex, nofollow'), 'launch guard: noindex header still present (remove only with owner approval)');
+    {
+      // Indexing enabled: the astosec.com pages rule has no X-Robots-Tag; only the workers.dev/preview rule keeps noindex.
+      const raw = readFileSync(new URL('../public/_headers', import.meta.url), 'utf8');
+      const siteRule = (raw.split(/^\/\*$/m)[1] || '').split(/^\S/m)[0];
+      check(raw.includes('\n/*\n') && !/X-Robots-Tag/i.test(siteRule), 'indexing: no X-Robots-Tag on the astosec.com pages rule');
+      check(headers.filter(l => /^\s+X-Robots-Tag:/i.test(l)).length === 1,'indexing: noindex appears only in the alternative-hostname rule');
+      const meta = await page.evaluate(() => document.querySelector('meta[name="robots"]')?.content || '');
+      check(!/noindex/i.test(meta), 'indexing: homepage has no robots noindex meta tag');
+    }
     check(['X-Content-Type-Options: nosniff', 'Referrer-Policy:', 'X-Frame-Options: DENY', 'Permissions-Policy:', 'Content-Security-Policy-Report-Only:'].every(has), 'security headers present in _headers (CSP report-only)');
     check(headers.every(l => !l.trim() || l.startsWith('/') || l.startsWith('https://') || /^\s+[A-Za-z-]+: \S/.test(l)), '_headers has only rule lines and header lines (no comments inside the rule)');
     {
