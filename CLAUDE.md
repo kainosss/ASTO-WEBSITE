@@ -12,7 +12,7 @@
 - Modern, minimalist, welcoming, and trustworthy; not aggressive or corporate.
 - Visual palette: warm off-white backgrounds, deep forest-green sections, subtle muted accent tones.
 - Keep generous whitespace, simple cards, readable type, light animation, and a strong photographic hero.
-- Hero is a synthetic illustrative image in `public/assets/asto-home-hero-v3.webp` (AI-generated, photograph-style, background only), **not** genuine on-site photography or evidence of an ASTO installation, customer property or specific installed product. Do not present it as a completed job.
+- Hero is a synthetic illustrative image in `public/assets/asto-home-hero-v4.webp` (AI-generated, photograph-style, background only; v4 retouches the dome camera's lower housing), **not** genuine on-site photography or evidence of an ASTO installation, customer property or specific installed product. Do not present it as a completed job.
 - Preserve desktop and mobile responsiveness, accessible controls, and sensible reduced-motion support.
 
 ## Codebase and development

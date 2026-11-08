@@ -21,7 +21,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="assets/branding/asto-favicon-tab.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="assets/branding/apple-touch-icon.png">
-  <link rel="preload" href="assets/asto-home-hero-v3.webp" as="image" type="image/webp" fetchpriority="high">
+  <link rel="preload" href="assets/asto-home-hero-v4.webp" as="image" type="image/webp" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -124,42 +124,52 @@
 
     <section class="section cctv-section" id="why-hard-wired" aria-labelledby="cctv-heading">
       <div class="container">
-        <div class="section-intro reveal">
+        <div class="cctv-intro reveal">
           <div><p class="section-eyebrow">WHY HARD-WIRED CCTV?</p><h2 id="cctv-heading">Built for reliable,<br><span>everyday security.</span></h2></div>
-          <p>DIY wireless cameras can be convenient, but a professionally installed hard-wired CCTV system offers advantages when you want dependable coverage around your property.</p>
+          <p>Battery cameras can be convenient, but for consistent, dependable coverage, a professionally installed hard-wired system offers clear advantages for your property.</p>
         </div>
-        <ul class="cctv-grid">
-          <li class="cctv-benefit reveal">
-            <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M12 5v6m8-6v6"/><path d="M9 11h14v5a7 7 0 0 1-14 0v-5Z"/><path d="M16 23v5"/></svg></span>
-            <h3>Reliable connection</h3>
-            <p>Cameras connect to the recorder by cable, so they don’t depend on Wi-Fi signal strength and are less affected by wireless interference.</p>
-          </li>
-          <li class="cctv-benefit reveal">
-            <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M16 10v6l4 3"/></svg></span>
-            <h3>Continuous recording</h3>
-            <p>With suitable recorder settings and storage, cameras can record around the clock, rather than relying only on motion-triggered clips.</p>
-          </li>
-          <li class="cctv-benefit reveal">
-            <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><rect x="5" y="9" width="22" height="14" rx="2"/><path d="M5 17h22M9 20h5"/><circle cx="22.5" cy="20" r=".8"/></svg></span>
-            <h3>Local video storage</h3>
-            <p>Footage is kept on your own recorder. A typical NVR-based system doesn’t need a cloud recording subscription.</p>
-          </li>
-          <li class="cctv-benefit reveal">
-            <span class="service-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M18 4 8 18h7l-1 10 10-14h-7l1-10Z"/></svg></span>
-            <h3>No battery charging</h3>
-            <p>Power over Ethernet (PoE) cameras receive power through their network cable, so there’s no routine battery charging or replacement.</p>
-          </li>
-        </ul>
-        <div class="cctv-footer reveal">
-          <div class="cctv-notes">
-            <p>Professional installation also means considered camera positioning, neat cabling and a system configured to suit your property.</p>
-            <p class="cctv-fine">Viewing footage on your phone still uses an internet connection, and a backup power supply (UPS) can help keep the system running during a power outage. Many wireless cameras offer local storage too, so the right choice depends on your property and how you’d like to use it.</p>
+        <div class="compare reveal">
+          <table class="compare-table">
+            <caption class="visually-hidden">Typical battery-powered DIY cameras compared with professionally installed hard-wired PoE CCTV</caption>
+            <thead>
+              <tr>
+                <th scope="col"><span class="visually-hidden">Feature</span></th>
+                <th scope="col"><span class="compare-head"><svg class="compare-head-icon" viewBox="0 0 32 32" aria-hidden="true"><rect x="10" y="7" width="12" height="16" rx="6" transform="rotate(40 16 15)"/><circle cx="13.6" cy="17.6" r="2"/><path d="M8.5 24.5 6 28M21.5 5.5a4 4 0 0 1 3.6 3.2M22.8 2.6a7 7 0 0 1 5.6 5.4"/></svg><span><span class="compare-head-title">Typical battery-powered DIY cameras</span><span class="compare-head-sub">Convenient, but with some limitations</span></span></span></th>
+                <th scope="col" class="compare-wired"><span class="compare-head"><svg class="compare-head-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="m4 12 17-6 3 6-17 6-3-6Z"/><path d="m24 12 3.5-1.2 1 2.6-3.6 1.2M8.5 17.5 10 22H4M4 19v6"/><circle cx="18.5" cy="10.5" r="1.3"/></svg><span><span class="compare-head-title">Professionally installed hard-wired PoE CCTV</span><span class="compare-head-sub">Built for dependable, long-term coverage</span></span></span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row"><span class="compare-feature"><span class="compare-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 9.5a12 12 0 0 1 17 0M6.5 12.6a7.6 7.6 0 0 1 11 0M9.5 15.6a3.4 3.4 0 0 1 5 0"/><circle cx="12" cy="18.6" r=".9"/></svg></span>Connection</span></th>
+                <td data-label="Battery DIY"><span class="compare-cell">Usually Wi-Fi, so signal strength matters</span></td>
+                <td class="compare-wired" data-label="Hard-wired PoE"><span class="compare-cell"><svg class="compare-check" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11"/><path d="m6.5 11.3 3 3 6-6.3"/></svg><span>Direct network cable to the recorder</span></span></td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="compare-feature"><span class="compare-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12.5" rx="2"/><path d="m10.3 8.3 4.2 2.5-4.2 2.5Z"/><path d="M8.5 20h7"/></svg></span>Recording</span></th>
+                <td data-label="Battery DIY"><span class="compare-cell">Often motion-triggered clips</span></td>
+                <td class="compare-wired" data-label="Hard-wired PoE"><span class="compare-cell"><svg class="compare-check" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11"/><path d="m6.5 11.3 3 3 6-6.3"/></svg><span>24/7 recording supported</span></span></td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="compare-feature"><span class="compare-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="7.5" width="16" height="9" rx="2"/><path d="M21 10.5v3M6 10.5v3M8.5 10.5v3"/></svg></span>Power</span></th>
+                <td data-label="Battery DIY"><span class="compare-cell">Regular battery charging or replacement</span></td>
+                <td class="compare-wired" data-label="Hard-wired PoE"><span class="compare-cell"><svg class="compare-check" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11"/><path d="m6.5 11.3 3 3 6-6.3"/></svg><span>Power through the network cable (PoE)</span></span></td>
+              </tr>
+              <tr>
+                <th scope="row"><span class="compare-feature"><span class="compare-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="7" rx="1.6"/><rect x="4" y="13" width="16" height="7" rx="1.6"/><path d="M7.5 7.5h.01M7.5 16.5h.01M11 7.5h5M11 16.5h5"/></svg></span>Storage</span></th>
+                <td data-label="Battery DIY"><span class="compare-cell">Cloud or local options, depending on the model</span></td>
+                <td class="compare-wired" data-label="Hard-wired PoE"><span class="compare-cell"><svg class="compare-check" viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="11"/><path d="m6.5 11.3 3 3 6-6.3"/></svg><span>Dedicated local NVR on site</span></span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="compare-note reveal"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6h.01"/></svg><span>Features vary by model, and some wireless cameras also offer local storage or continuous recording. Remote viewing still uses an internet connection, and a UPS can help keep a wired system running during a power outage.</span></p>
+        <div class="cctv-cta reveal">
+          <span class="cctv-cta-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 7 3v5.5c0 4.3-2.9 7.6-7 9.5-4.1-1.9-7-5.2-7-9.5V6l7-3Z"/><path d="m8.8 12 2.2 2.2 4.3-4.4"/></svg></span>
+          <div class="cctv-cta-text">
+            <h3>Professional installation for a system you can rely on.</h3>
+            <p>Considered camera positioning, neat cabling and a system configured to suit your property.</p>
           </div>
-          <div class="cctv-cta">
-            <h3>Thinking about upgrading your property security?</h3>
-            <p>We can recommend and install a CCTV system suited to your property, coverage needs and budget.</p>
-            <a class="button button-dark" href="#contact">Get a Free CCTV Quote <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
-          </div>
+          <a class="button button-dark" href="#contact">Get a Free CCTV Quote <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a>
         </div>
       </div>
     </section>

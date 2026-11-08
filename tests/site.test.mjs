@@ -102,7 +102,7 @@ try {
   }
 
   // ---------- "Why hard-wired CCTV?" section ----------
-  for (const [label, width, height] of [['desktop', 1440, 900], ['mobile', 390, 844]]) {
+  for (const [label, width, height] of [['desktop', 1440, 900], ['tablet', 820, 1000], ['mobile', 390, 844], ['small', 320, 700]]) {
     const { page, problems, sent } = await openPage({ width, height });
     const s = await page.evaluate(() => {
       const sec = document.getElementById('why-hard-wired');
@@ -114,7 +114,13 @@ try {
         labelledBy: sec.getAttribute('aria-labelledby') === 'cctv-heading' && sec.querySelector('h2#cctv-heading') !== null,
         eyebrow: sec.querySelector('.section-eyebrow')?.textContent.trim(),
         h2: sec.querySelector('h2').innerText.replace(/\s+/g, ' ').trim(),
-        benefits: [...sec.querySelectorAll('.cctv-grid > li h3')].map(h => h.textContent.trim()),
+        rows: [...sec.querySelectorAll('.compare-table tbody tr')].map(tr => [tr.querySelector('th[scope="row"]')?.textContent.trim(), ...[...tr.querySelectorAll('td')].map(td => td.textContent.trim())]),
+        cols: [...sec.querySelectorAll('.compare-table thead th[scope="col"]')].map(th => th.textContent.trim()),
+        caption: sec.querySelector('.compare-table caption')?.textContent.trim() || '',
+        mobileLabels: [...sec.querySelectorAll('.compare-table td')].map(td => getComputedStyle(td, '::before').content),
+        cards: sec.querySelectorAll('.cctv-grid, .cctv-benefit, .service-card').length,
+        checks: sec.querySelectorAll('td.compare-wired .compare-check').length,
+        tiles: sec.querySelectorAll('tbody th .compare-tile').length,
         headings: [...sec.querySelectorAll('h2, h3')].map(h => h.tagName),
         iconsHidden: [...sec.querySelectorAll('svg')].every(svg => svg.closest('[aria-hidden="true"]')),
         cta: cta && cta.textContent.trim(),
@@ -128,13 +134,26 @@ try {
     if (!s) { await page.close(); continue; }
     check(s.afterServices, `cctv ${label}: placed directly after Services, before the enquiry form`);
     check(s.labelledBy && s.eyebrow === 'WHY HARD-WIRED CCTV?' && s.h2 === 'Built for reliable, everyday security.', `cctv ${label}: eyebrow and heading`, `${s.eyebrow} / ${s.h2}`);
-    check(JSON.stringify(s.benefits) === JSON.stringify(['Reliable connection', 'Continuous recording', 'Local video storage', 'No battery charging']), `cctv ${label}: four benefits`, s.benefits.join(','));
-    check(s.headings[0] === 'H2' && s.headings.slice(1).every(t => t === 'H3'), `cctv ${label}: heading hierarchy is h2 then h3`, s.headings.join(','));
+    check(JSON.stringify(s.rows.map(r => r[0])) === JSON.stringify(['Connection', 'Recording', 'Power', 'Storage']) && s.rows.every(r => r.length === 3 && r[1] && r[2]), `cctv ${label}: one comparison with four rows (connection, recording, power, storage)`, JSON.stringify(s.rows));
+    check(s.cols[0] === 'Feature' && /battery-powered DIY/i.test(s.cols[1]) && /hard-wired PoE/i.test(s.cols[2]) && /compared with/.test(s.caption), `cctv ${label}: comparison columns and caption name both options`, s.cols.join(' | '));
+    check(/Wi-Fi/.test(s.rows[0][1]) && /network cable/.test(s.rows[0][2]) && /motion-triggered/.test(s.rows[1][1]) && /24\/7 recording supported/.test(s.rows[1][2]) && /battery/i.test(s.rows[2][1]) && /network cable/.test(s.rows[2][2]) && /Cloud or local/.test(s.rows[3][1]) && /NVR/.test(s.rows[3][2]), `cctv ${label}: row wording matches the agreed comparison`);
+    check(/^Usually/.test(s.rows[0][1]) && /^Often/.test(s.rows[1][1]) && /depending on the model/.test(s.rows[3][1]), `cctv ${label}: DIY column is hedged (usually/often/depending on the model), not absolute`);
+    check(s.cards === 0, `cctv ${label}: no separate benefit cards`);
+    if (width <= 760) check(s.mobileLabels.every(c => /Battery DIY|Hard-wired PoE/.test(c)), `cctv ${label}: stacked layout labels both options on every row`, s.mobileLabels.join(','));
+    check(s.headings.join(',') === 'H2,H3', `cctv ${label}: heading hierarchy is h2, then one h3 for the CTA (comparison uses table headers)`, s.headings.join(','));
     check(s.iconsHidden, `cctv ${label}: decorative icons hidden from screen readers`);
-    check(/considered camera positioning, neat cabling/.test(s.text) && /We can recommend and install a CCTV system suited to your property, coverage needs and budget\./.test(s.text), `cctv ${label}: installation statement and CTA copy present`);
-    check(/internet connection/.test(s.text) && /\(UPS\)/.test(s.text) && /wireless cameras offer local storage too/.test(s.text), `cctv ${label}: accuracy notes (remote viewing, UPS, DIY local storage) present`);
-    check(!/\$\d|price|pricing|review|testimonial|guarantee|24\/7|prevent crime/i.test(s.text), `cctv ${label}: no pricing, reviews, guarantees or crime-prevention claims`);
+    check(/considered camera positioning, neat cabling/i.test(s.text) && /Professional installation for a system you can rely on\./.test(s.text), `cctv ${label}: installation heading and sentence present`);
+    check(s.checks === 4 && s.tiles === 4, `cctv ${label}: four check marks in the hard-wired column and four feature icons`, `${s.checks}/${s.tiles}`);
+    check(/vary by model/.test(s.text) && /internet connection/.test(s.text) && /UPS/.test(s.text) && /wireless cameras also offer local storage or continuous recording/.test(s.text), `cctv ${label}: accuracy note (models vary, remote viewing, UPS) present`);
+    check(!/\$\d|price|pricing|review|testimonial|guarantee|24\/7 monitor|monitoring|emergency response|prevent crime/i.test(s.text), `cctv ${label}: no pricing, reviews, guarantees, monitoring or crime-prevention claims`);
     check(s.forms === 0 && s.overflow === 0, `cctv ${label}: no extra form and no horizontal overflow`, `${s.forms} fields, ${s.overflow} overflowing`);
+    // Layout flow: intro → comparison → note → CTA row, with the CTA last and full width.
+    const flow = await page.evaluate(() => {
+      const r = sel => document.querySelector(`#why-hard-wired ${sel}`).getBoundingClientRect();
+      const intro = r('.cctv-intro'), cmp = r('.compare'), note = r('.compare-note'), cta = r('.cctv-cta'), btn = r('.cctv-cta a.button');
+      return { order: intro.bottom <= cmp.top && cmp.bottom <= note.top && note.bottom <= cta.top, fullWidth: Math.abs(cta.width - cmp.width) < 1, btnInside: btn.left >= cta.left && btn.right <= cta.right && btn.top >= cta.top && btn.bottom <= cta.bottom };
+    });
+    check(flow.order && flow.fullWidth && flow.btnInside, `cctv ${label}: comparison, note and CTA follow in order, CTA last and full width`, JSON.stringify(flow));
     check(s.cta === 'Get a Free CCTV Quote' && s.ctaVisible, `cctv ${label}: "Get a Free CCTV Quote" button links to #contact`, s.cta);
     // Keyboard: focus the CTA and press Enter; it should take the visitor to the existing enquiry form.
     await page.focus('#why-hard-wired a.button');
@@ -274,7 +293,12 @@ try {
     check(has('X-Robots-Tag: noindex, nofollow'), 'launch guard: noindex header still present (remove only with owner approval)');
     check(['X-Content-Type-Options: nosniff', 'Referrer-Policy:', 'X-Frame-Options: DENY', 'Permissions-Policy:', 'Content-Security-Policy-Report-Only:'].every(has), 'security headers present in _headers (CSP report-only)');
     check(headers.every(l => !l.trim() || l.startsWith('/') || /^\s+[A-Za-z-]+: \S/.test(l)), '_headers has only rule lines and header lines (no comments inside the rule)');
-    for (const path of ['/privacy.html', '/robots.txt', '/assets/og-image.jpg', '/assets/branding/apple-touch-icon.png', '/assets/branding/asto-favicon-tab.svg']) {
+    {
+      const css = readFileSync(new URL('../public/styles.css', import.meta.url), 'utf8');
+      const preload = await page.evaluate(() => document.querySelector('link[rel="preload"][as="image"]')?.getAttribute('href'));
+      check(preload === 'assets/asto-home-hero-v4.webp' && css.includes("url('assets/asto-home-hero-v4.webp')") && !/hero-v3/.test(css), 'hero: preload and CSS both use the retouched hero image');
+    }
+    for (const path of ['/assets/asto-home-hero-v4.webp', '/privacy.html', '/robots.txt', '/assets/og-image.jpg', '/assets/branding/apple-touch-icon.png', '/assets/branding/asto-favicon-tab.svg']) {
       const r = await page.request.get(`${BASE}${path}`);
       check(r.status() === 200, `asset: ${path} is served`);
     }
